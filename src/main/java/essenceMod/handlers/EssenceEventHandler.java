@@ -10,6 +10,7 @@ import net.minecraft.entity.boss.EntityWither;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.monster.EntityMob;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.MobEffects;
 import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -220,11 +221,11 @@ public class EssenceEventHandler
 				EntityLivingBase enemy = (EntityLivingBase) event.getSource().getEntity();
 				if (rand.nextInt(100) < (ConfigHandler.blindThornsChance * blindCount))
 				{
-					enemy.addPotionEffect(new PotionEffect(Potion.blindness.id, blindThorns * ConfigHandler.blindThornsDuration, 0));
+					enemy.addPotionEffect(new PotionEffect(MobEffects.BLINDNESS, blindThorns * ConfigHandler.blindThornsDuration, 0));
 				}
 				if (poisonCount != 0)
 				{
-					enemy.addPotionEffect(new PotionEffect(Potion.poison.id, poisonThorns * ConfigHandler.poisonThornsDuration, poisonCount - 1));
+					enemy.addPotionEffect(new PotionEffect(MobEffects.POISON, poisonThorns * ConfigHandler.poisonThornsDuration, poisonCount - 1));
 				}
 			}
 		}

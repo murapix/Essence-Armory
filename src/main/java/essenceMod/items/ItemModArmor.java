@@ -11,6 +11,7 @@ import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.entity.ai.attributes.IAttributeInstance;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.MobEffects;
 import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.item.ItemArmor;
 import net.minecraft.item.ItemStack;
@@ -121,7 +122,7 @@ public class ItemModArmor extends ItemArmor implements IUpgradeable
 				}
 			}
 			absorption *= ConfigHandler.absorptionCount;
-			PotionEffect potion = player.getActivePotionEffect(Potion.absorption);
+			PotionEffect potion = player.getActivePotionEffect(MobEffects.ABSORPTION);
 			float potionAbsorption;
 			if (potion == null) potionAbsorption = 0;
 			else potionAbsorption = (potion.getAmplifier() + 1) * 4;

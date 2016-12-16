@@ -10,6 +10,7 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.MobEffects;
 import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemSword;
@@ -138,22 +139,22 @@ public class ItemModSword extends ItemSword implements IUpgradeable
 		}
 
 		int poison = Upgrade.getUpgradeLevel(item, UpgradeRegistry.WeaponMagicDoT);
-		if (poison != 0) enemy.addPotionEffect(new PotionEffect(Potion.poison.id, 25 * poison, poison - 1));
+		if (poison != 0) enemy.addPotionEffect(new PotionEffect(MobEffects.POISON, 25 * poison, poison - 1));
 
 		int burn = Upgrade.getUpgradeLevel(item, UpgradeRegistry.WeaponFireDoT);
 		if (burn != 0) enemy.setFire(burn);
 
 		int decay = Upgrade.getUpgradeLevel(item, UpgradeRegistry.WeaponWitherDoT);
-		if (decay != 0) enemy.addPotionEffect(new PotionEffect(Potion.wither.id, 25 * decay, decay - 1));
+		if (decay != 0) enemy.addPotionEffect(new PotionEffect(MobEffects.WITHER, 25 * decay, decay - 1));
 
 		int lifesteal = Upgrade.getUpgradeLevel(item, UpgradeRegistry.SwordLifesteal);
 		if (lifesteal != 0) player.heal(lifesteal * 0.25F);
 
 		int slow = Upgrade.getUpgradeLevel(item, UpgradeRegistry.WeaponSlow);
-		if (slow != 0) enemy.addPotionEffect(new PotionEffect(Potion.moveSlowdown.id, 25 * slow, slow - 1));
+		if (slow != 0) enemy.addPotionEffect(new PotionEffect(MobEffects.SLOWNESS, 25 * slow, slow - 1));
 
 		int blind = Upgrade.getUpgradeLevel(item, UpgradeRegistry.WeaponBlind);
-		if (blind != 0) enemy.addPotionEffect(new PotionEffect(Potion.blindness.id, 25 * slow));
+		if (blind != 0) enemy.addPotionEffect(new PotionEffect(MobEffects.BLINDNESS, 25 * slow));
 
 		int knockback = Upgrade.getUpgradeLevel(item, UpgradeRegistry.WeaponKnockback);
 		if (knockback != 0) enemy.knockBack(player, weaponDamage, (player.posX - enemy.posX) * knockback, (player.posZ - enemy.posZ) * knockback);
