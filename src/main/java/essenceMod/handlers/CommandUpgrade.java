@@ -2,13 +2,14 @@ package essenceMod.handlers;
 
 import java.util.ArrayList;
 import java.util.List;
+import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommand;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.util.BlockPos;
-import net.minecraft.util.ChatComponentText;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.TextComponentString;
 import essenceMod.items.IUpgradeable;
 import essenceMod.registry.crafting.InfuserRecipes;
 import essenceMod.registry.crafting.upgrades.Upgrade;
@@ -16,7 +17,7 @@ import essenceMod.registry.crafting.upgrades.UpgradeRegistry;
 
 public class CommandUpgrade implements ICommand
 {
-	private final List aliases;
+	private final List<String> aliases;
 
 	protected String fullUpgradeName;
 	protected int upgradeLevel;
@@ -46,46 +47,51 @@ public class CommandUpgrade implements ICommand
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public List getCommandAliases()
+	public List<String> getCommandAliases()
 	{
 		return this.aliases;
 	}
 
 	@Override
-	public void processCommand(ICommandSender sender, String[] input)
+	public boolean isUsernameIndex(String[] input, int i)
 	{
-		if (input.length != 2)
+		return false;
+	}
+
+	@Override
+	public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException
+	{
+		if (args.length != 2)
 		{
-			sender.addChatMessage(new ChatComponentText("Invalid argument"));
+			sender.addChatMessage(new TextComponentString("Invalid argument"));
 			return;
 		}
-		fullUpgradeName = input[0];
+		fullUpgradeName = args[0];
 		upgradeLevel = 0;
 		try
 		{
-			upgradeLevel = Integer.parseInt(input[1]);
+			upgradeLevel = Integer.parseInt(args[1]);
 		}
 		catch (Exception e)
 		{
-			sender.addChatMessage(new ChatComponentText("Invalid argument"));
+			sender.addChatMessage(new TextComponentString("Invalid argument"));
 		}
 		if (!(sender instanceof EntityPlayer)) return;
 		EntityPlayer player = (EntityPlayer) sender;
 		Upgrade newUpgrade = new Upgrade(fullUpgradeName, upgradeLevel);
-		ItemStack item = player.getCurrentEquippedItem();
+		ItemStack item = player.getHeldItem(player.getActiveHand());
 		if (item == null || !(item.getItem() instanceof IUpgradeable)) return;
-		InfuserRecipes.addUpgrade(player.getCurrentEquippedItem(), newUpgrade);
+		InfuserRecipes.addUpgrade(player.getHeldItem(player.getActiveHand()), newUpgrade);
 	}
 
 	@Override
-	public boolean canCommandSenderUseCommand(ICommandSender sender)
+	public boolean checkPermission(MinecraftServer server, ICommandSender sender)
 	{
-		return MinecraftServer.getServer().getConfigurationManager().canSendCommands(((EntityPlayer) sender).getGameProfile());
+		return false;
 	}
 
 	@Override
-	public List<String> addTabCompletionOptions(ICommandSender sender, String[] input, BlockPos pos)
+	public List<String> getTabCompletionOptions(MinecraftServer server, ICommandSender sender, String[] args, BlockPos pos)
 	{
 		ArrayList<String> options = new ArrayList<String>();
 		options.add(UpgradeRegistry.AmuletFlight.name);
@@ -150,11 +156,5 @@ public class CommandUpgrade implements ICommand
 		options.add(UpgradeRegistry.WeaponWitherDamage.name);
 		options.add(UpgradeRegistry.WeaponWitherDoT.name);
 		return options;
-	}
-
-	@Override
-	public boolean isUsernameIndex(String[] input, int i)
-	{
-		return false;
 	}
 }

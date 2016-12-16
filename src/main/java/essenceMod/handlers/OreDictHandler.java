@@ -12,6 +12,5 @@ public class OreDictHandler
 		OreDictionary.registerOre("ingotEssenceInfused", ModItems.infusedIngot);
 		OreDictionary.registerOre("blockEssenceInfused", ModBlocks.infusedBlock);
 		OreDictionary.registerOre("blockInfusedStarmetal", ModBlocks.infusedStarmetal);
-		OreDictionary.registerOre("appleEssenceInfused", ModItems.infusedApple);
 	}
 }

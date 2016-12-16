@@ -2,7 +2,7 @@ package essenceMod.items.baubles;
 
 import java.util.List;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.resources.model.ModelResourceLocation;
+import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
@@ -10,7 +10,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
-import net.minecraft.util.StatCollector;
+import net.minecraft.util.text.translation.I18n;
 import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
@@ -18,15 +18,15 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
-import thaumcraft.api.damagesource.DamageSourceThaumcraft;
 import baubles.api.BaubleType;
-import baubles.common.lib.PlayerHandler;
+import baubles.api.BaublesApi;
 import essenceMod.handlers.ConfigHandler;
 import essenceMod.registry.crafting.InfuserRecipes;
 import essenceMod.registry.crafting.upgrades.Upgrade;
 import essenceMod.registry.crafting.upgrades.UpgradeRegistry;
 import essenceMod.utility.UtilityHelper;
 
+@SuppressWarnings("deprecation")
 public class ItemAmulet extends ItemBauble
 {
 	public int level;
@@ -47,7 +47,7 @@ public class ItemAmulet extends ItemBauble
 	}
 
 	@Override
-	public void getSubItems(Item item, CreativeTabs tab, List list)
+	public void getSubItems(Item item, CreativeTabs tab, List<ItemStack> list)
 	{
 		for (int i = 0; i < numSubTypes; i++)
 			list.add(new ItemStack(item, 1, i));
@@ -110,51 +110,45 @@ public class ItemAmulet extends ItemBauble
 	public void playerLoggedIn(PlayerLoggedInEvent event)
 	{
 		EntityPlayer player = event.player;
-		ItemStack amulet = PlayerHandler.getPlayerBaubles(player).getStackInSlot(0);
+		ItemStack amulet = BaublesApi.getBaubles(player).getStackInSlot(0);
 		if (amulet != null && amulet.getItem() instanceof ItemAmulet && Upgrade.getUpgradeLevel(amulet, UpgradeRegistry.AmuletFlight) != 0) player.capabilities.allowFlying = true;
 	}
 
 	@SubscribeEvent
 	public void onPotionDamage(LivingHurtEvent event)
 	{
-		EntityLivingBase entity = event.entityLiving;
+		EntityLivingBase entity = event.getEntityLiving();
 		if (entity instanceof EntityPlayer)
 		{
 			EntityPlayer player = (EntityPlayer) entity;
-			ItemStack amulet = PlayerHandler.getPlayerBaubles(player).getStackInSlot(0);
+			ItemStack amulet = BaublesApi.getBaubles(player).getStackInSlot(0);
 			if (amulet != null && amulet.getItem() instanceof ItemAmulet)
 			{
 				int poison = Upgrade.getUpgradeLevel(amulet, UpgradeRegistry.BaublePoisonImmunity);
 				int wither = Upgrade.getUpgradeLevel(amulet, UpgradeRegistry.BaubleWitherImmunity);
 				int fire = Upgrade.getUpgradeLevel(amulet, UpgradeRegistry.BaubleFireImmunity);
-				int taint = Upgrade.getUpgradeLevel(amulet, UpgradeRegistry.BaubleTaintImmunity);
-				if (poison != 0 && event.source.isMagicDamage())
+				if (poison != 0 && event.getSource().isMagicDamage())
 				{
-					event.ammount -= Math.min(poison * 0.25F, 1F);
+					event.setAmount(event.getAmount() - Math.min(poison * 0.25F, 1F));
 					player.heal(Math.max((poison - 4) * 0.25F, 0F));
 				}
-				if (wither != 0 && event.source.equals(DamageSource.wither))
+				if (wither != 0 && event.getSource().equals(DamageSource.wither))
 				{
-					event.ammount -= Math.min(wither * 0.25F, 1F);
+					event.setAmount(event.getAmount() - Math.min(wither * 0.25F, 1F));
 					player.heal(Math.max((wither - 4) * 0.25F, 0F));
 				}
-				if (fire != 0 && event.source.isFireDamage())
+				if (fire != 0 && event.getSource().isFireDamage())
 				{
-					event.ammount -= Math.min(fire * 0.25F, 1F);
+					event.setAmount(event.getAmount() - Math.min(fire * 0.25F, 1F));
 					player.heal(Math.max((fire - 4) * 0.25F, 0F));
 				}
-				if (taint != 0 && event.source instanceof DamageSourceThaumcraft)
-				{
-					event.ammount -= Math.min(taint * 0.25F, 1F);
-					player.heal(Math.max((taint - 4) * 0.25F, 0F));
-				}
-				if (event.ammount <= 0) event.setCanceled(true);
+				if (event.getAmount() <= 0) event.setCanceled(true);
 			}
 		}
 	}
 
 	@Override
-	public void addInformation(ItemStack item, EntityPlayer entityPlayer, List list, boolean bool)
+	public void addInformation(ItemStack item, EntityPlayer entityPlayer, List<String> list, boolean bool)
 	{
 		int level = 0;
 		if (!item.hasTagCompound()) onCreated(item, entityPlayer.worldObj, entityPlayer);
@@ -169,11 +163,11 @@ public class ItemAmulet extends ItemBauble
 		int fire = Upgrade.getUpgradeLevel(item, UpgradeRegistry.BaubleFireImmunity);
 		int taint = Upgrade.getUpgradeLevel(item, UpgradeRegistry.BaubleTaintImmunity);
 
-		if (flight != 0) list.add(StatCollector.translateToLocal(UpgradeRegistry.AmuletFlight.name));
-		if (looting != 0) list.add(StatCollector.translateToLocal(UpgradeRegistry.AmuletLooting.name) + " " + UtilityHelper.toRoman(looting));
-		if (poison != 0) list.add(StatCollector.translateToLocal(UpgradeRegistry.BaublePoisonImmunity.name) + " " + UtilityHelper.toRoman(poison));
-		if (wither != 0) list.add(StatCollector.translateToLocal(UpgradeRegistry.BaubleWitherImmunity.name) + " " + UtilityHelper.toRoman(wither));
-		if (fire != 0) list.add(StatCollector.translateToLocal(UpgradeRegistry.BaubleFireImmunity.name) + " " + UtilityHelper.toRoman(fire));
-		if (taint != 0) list.add(StatCollector.translateToLocal(UpgradeRegistry.BaubleTaintImmunity.name) + " " + UtilityHelper.toRoman(taint));
+		if (flight != 0) list.add(I18n.translateToLocal(UpgradeRegistry.AmuletFlight.name));
+		if (looting != 0) list.add(I18n.translateToLocal(UpgradeRegistry.AmuletLooting.name) + " " + UtilityHelper.toRoman(looting));
+		if (poison != 0) list.add(I18n.translateToLocal(UpgradeRegistry.BaublePoisonImmunity.name) + " " + UtilityHelper.toRoman(poison));
+		if (wither != 0) list.add(I18n.translateToLocal(UpgradeRegistry.BaubleWitherImmunity.name) + " " + UtilityHelper.toRoman(wither));
+		if (fire != 0) list.add(I18n.translateToLocal(UpgradeRegistry.BaubleFireImmunity.name) + " " + UtilityHelper.toRoman(fire));
+		if (taint != 0) list.add(I18n.translateToLocal(UpgradeRegistry.BaubleTaintImmunity.name) + " " + UtilityHelper.toRoman(taint));
 	}
 }

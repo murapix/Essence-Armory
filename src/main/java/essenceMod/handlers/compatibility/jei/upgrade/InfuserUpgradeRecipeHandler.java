@@ -29,4 +29,10 @@ public class InfuserUpgradeRecipeHandler implements IRecipeHandler<UpgradeRecipe
 	{
 		return true;
 	}
+
+	@Override
+	public String getRecipeCategoryUid(UpgradeRecipe recipe)
+	{
+		return null;
+	}
 }

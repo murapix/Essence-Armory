@@ -2,6 +2,7 @@ package essenceMod.handlers.compatibility.jei.item;
 
 import java.util.ArrayList;
 import java.util.List;
+import mezz.jei.api.ingredients.IIngredients;
 import mezz.jei.api.recipe.IRecipeWrapper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.item.ItemStack;
@@ -14,12 +15,14 @@ import essenceMod.registry.crafting.ItemRecipe;
 public class InfuserItemRecipeWrapper implements IRecipeWrapper
 {
 	private ItemStack item;
+	@SuppressWarnings("rawtypes")
 	private ArrayList input;
 	private ItemStack output;
 
+	@SuppressWarnings("unchecked")
 	public InfuserItemRecipeWrapper(ItemRecipe recipe)
 	{
-		input = new ArrayList();
+		input = new ArrayList<>();
 		for (Object o : recipe.getItems())
 		{
 			if (o instanceof ItemStack) input.add(o);
@@ -29,8 +32,9 @@ public class InfuserItemRecipeWrapper implements IRecipeWrapper
 		item = recipe.getCenter();
 		output = recipe.getOutput();
 	}
-	
+
 	@Override
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public List getInputs()
 	{
 		input.add(0, item);
@@ -76,6 +80,8 @@ public class InfuserItemRecipeWrapper implements IRecipeWrapper
 	}
 
 	@Override
-	public void drawInfo(Minecraft minecraft, int recipeWidth, int recipeHeight)
-	{}
+	public void getIngredients(IIngredients ingredients)
+	{
+		
+	}
 }

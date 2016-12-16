@@ -3,13 +3,13 @@ package essenceMod.effects;
 import java.util.ConcurrentModificationException;
 import java.util.Random;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.particle.EntityFX;
+import net.minecraft.client.particle.Particle;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 import essenceMod.utility.Reference;
 
-public class GlowFX extends EntityFX
+public class GlowFX extends Particle
 {
 	Random rand = new Random();
 	public static final int LIFETIME = 10;
@@ -40,20 +40,14 @@ public class GlowFX extends EntityFX
 		particleMaxAge = maxAge;
 		TextureAtlasSprite sprite = Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(texture.toString());
 		sprite.load(Minecraft.getMinecraft().getResourceManager(), texture);
-		setParticleIcon(sprite);
-		noClip = false;
+		setParticleTexture(sprite);
+		canCollide = false;
 	}
 
 	@Override
 	public int getFXLayer()
 	{
 		return 1;
-	}
-
-	@Override
-	public float getAlpha()
-	{
-		return 0.99F;
 	}
 
 	@Override
@@ -65,14 +59,13 @@ public class GlowFX extends EntityFX
 		}
 		catch (ConcurrentModificationException e)
 		{
-			kill();
+			setExpired();
 		}
 		int random = rand.nextInt(4);
 		if (random >= 2) particleAge++;
 		if (particleAge > particleMaxAge)
 		{
-			getEntityWorld().removeEntity(this);
-			kill();
+			setExpired();
 		}
 	}
 }

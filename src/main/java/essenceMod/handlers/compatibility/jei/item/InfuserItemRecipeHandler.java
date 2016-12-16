@@ -29,4 +29,10 @@ public class InfuserItemRecipeHandler implements IRecipeHandler<ItemRecipe>
 	{
 		return true;
 	}
+
+	@Override
+	public String getRecipeCategoryUid(ItemRecipe recipe)
+	{
+		return null;
+	}
 }

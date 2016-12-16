@@ -2,23 +2,24 @@ package essenceMod.registry.crafting.upgrades;
 
 import java.util.ArrayList;
 import net.minecraft.block.Block;
+import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 
 public class UpgradeRecipe
 {
 	private ItemStack item;
-	private int slot;
+	private EntityEquipmentSlot slot;
 	private Upgrade upgrade;
 	private ArrayList<Upgrade> requirements = new ArrayList<Upgrade>();
 	private ArrayList<ItemStack> recipeItems = new ArrayList<ItemStack>();
 	
 	public UpgradeRecipe(ItemStack item, Upgrade upgrade, Upgrade[] requirements, Object... recipeItems)
 	{
-		this(item, -1, upgrade, requirements, recipeItems);
+		this(item, null, upgrade, requirements, recipeItems);
 	}
 	
-	public UpgradeRecipe(ItemStack item, int itemSlot, Upgrade upgrade, Upgrade[] requirements, Object... recipeItems)
+	public UpgradeRecipe(ItemStack item, EntityEquipmentSlot itemSlot, Upgrade upgrade, Upgrade[] requirements, Object... recipeItems)
 	{
 		this.item = item.copy();
 		this.slot = itemSlot;
@@ -39,7 +40,7 @@ public class UpgradeRecipe
 		return item;
 	}
 	
-	public int getSlot()
+	public EntityEquipmentSlot getSlot()
 	{
 		return slot;
 	}

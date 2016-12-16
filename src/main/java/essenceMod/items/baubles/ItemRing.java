@@ -3,8 +3,8 @@ package essenceMod.items.baubles;
 import java.util.List;
 import java.util.UUID;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.resources.model.ModelBakery;
-import net.minecraft.client.resources.model.ModelResourceLocation;
+import net.minecraft.client.renderer.block.model.ModelBakery;
+import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
@@ -12,12 +12,15 @@ import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.entity.ai.attributes.IAttributeInstance;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.PotionTypes;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.potion.Potion;
 import net.minecraft.potion.PotionEffect;
-import net.minecraft.util.StatCollector;
+import net.minecraft.potion.PotionType;
+import net.minecraft.util.DamageSource;
+import net.minecraft.util.text.translation.I18n;
 import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.living.LivingEvent.LivingJumpEvent;
@@ -28,11 +31,12 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import baubles.api.BaubleType;
-import baubles.common.lib.PlayerHandler;
+import baubles.api.BaublesApi;
 import essenceMod.registry.crafting.InfuserRecipes;
 import essenceMod.registry.crafting.upgrades.Upgrade;
 import essenceMod.registry.crafting.upgrades.UpgradeRegistry;
 
+@SuppressWarnings("deprecation")
 public class ItemRing extends ItemBauble
 {
 	public int level, cooldown;
@@ -55,7 +59,7 @@ public class ItemRing extends ItemBauble
 	}
 	
 	@Override
-	public void getSubItems(Item item, CreativeTabs tab, List list)
+	public void getSubItems(Item item, CreativeTabs tab, List<ItemStack> list)
 	{
 		for (int i = 0; i < numSubTypes; i++)
 			list.add(new ItemStack(item, 1, i));
@@ -109,13 +113,13 @@ public class ItemRing extends ItemBauble
 
 		if (item.hasTagCompound())
 		{
-			if (Upgrade.getUpgradeLevel(item, UpgradeRegistry.RingPotionNightVision) != 0) player.addPotionEffect(new PotionEffect(Potion.nightVision.id, 1, 1));
+			if (Upgrade.getUpgradeLevel(item, UpgradeRegistry.RingPotionNightVision) != 0) player.addPotionEffect(new PotionEffect(Potion.getPotionById(PotionType.getID(PotionTypes.NIGHT_VISION)), 1, 1));
 		}
 
 		if (player instanceof EntityPlayer)
 		{
 			EntityPlayer p = (EntityPlayer) player;
-			IAttributeInstance attribute = p.getAttributeMap().getAttributeInstance(SharedMonsterAttributes.movementSpeed);
+			IAttributeInstance attribute = p.getAttributeMap().getAttributeInstance(SharedMonsterAttributes.MOVEMENT_SPEED);
 			if (attribute != null)
 			{
 				if (Upgrade.getUpgradeLevel(item, UpgradeRegistry.RingPotionSwiftness) != 0)
@@ -123,7 +127,7 @@ public class ItemRing extends ItemBauble
 					attribute.removeModifier(speed);
 				}
 			}
-			attribute = p.getAttributeMap().getAttributeInstance(SharedMonsterAttributes.attackDamage);
+			attribute = p.getAttributeMap().getAttributeInstance(SharedMonsterAttributes.ATTACK_DAMAGE);
 			if (attribute != null)
 			{
 				if (Upgrade.getUpgradeLevel(item, UpgradeRegistry.RingPotionStrength) != 0)
@@ -167,9 +171,9 @@ public class ItemRing extends ItemBauble
 				cooldown = 60 / ((ItemRing) item.getItem()).getLevel(item);
 			}
 		}
-		if (Upgrade.getUpgradeLevel(item, UpgradeRegistry.RingPotionNightVision) != 0) player.addPotionEffect(new PotionEffect(Potion.nightVision.id, 220, 0));
-		if (Upgrade.getUpgradeLevel(item, UpgradeRegistry.RingPotionWaterBreathing) != 0) player.addPotionEffect(new PotionEffect(Potion.waterBreathing.id, 20, 0));
-		if (Upgrade.getUpgradeLevel(item, UpgradeRegistry.RingPotionFireResistance) != 0) player.addPotionEffect(new PotionEffect(Potion.fireResistance.id, 20, 0));
+		if (Upgrade.getUpgradeLevel(item, UpgradeRegistry.RingPotionNightVision) != 0) player.addPotionEffect(new PotionEffect(Potion.getPotionById(PotionType.getID(PotionTypes.NIGHT_VISION)), 220, 0));
+		if (Upgrade.getUpgradeLevel(item, UpgradeRegistry.RingPotionWaterBreathing) != 0) player.addPotionEffect(new PotionEffect(Potion.getPotionById(PotionType.getID(PotionTypes.WATER_BREATHING)), 20, 0));
+		if (Upgrade.getUpgradeLevel(item, UpgradeRegistry.RingPotionFireResistance) != 0) player.addPotionEffect(new PotionEffect(Potion.getPotionById(PotionType.getID(PotionTypes.FIRE_RESISTANCE)), 20, 0));
 	}
 
 	public int getLevel(ItemStack item)
@@ -178,7 +182,7 @@ public class ItemRing extends ItemBauble
 	}
 
 	@Override
-	public void addInformation(ItemStack item, EntityPlayer entityPlayer, List list, boolean bool)
+	public void addInformation(ItemStack item, EntityPlayer entityPlayer, List<String> list, boolean bool)
 	{
 		if (!item.hasTagCompound()) onCreated(item, entityPlayer.worldObj, entityPlayer);
 		
@@ -191,39 +195,39 @@ public class ItemRing extends ItemBauble
 		int waterBreathing = Upgrade.getUpgradeLevel(item, UpgradeRegistry.RingPotionWaterBreathing);
 		int fireResistance = Upgrade.getUpgradeLevel(item, UpgradeRegistry.RingPotionFireResistance);
 		
-		if (swiftness != 0) list.add(StatCollector.translateToLocal(UpgradeRegistry.RingPotionSwiftness.name + swiftness));
-		if (haste != 0) list.add(StatCollector.translateToLocal(UpgradeRegistry.RingPotionSwiftness.name + haste));
-		if (strength != 0) list.add(StatCollector.translateToLocal(UpgradeRegistry.RingPotionStrength.name + strength));
-		if (jumpBoost != 0) list.add(StatCollector.translateToLocal(UpgradeRegistry.RingPotionJumpBoost.name + jumpBoost));
-		if (regeneration != 0) list.add(StatCollector.translateToLocal(UpgradeRegistry.RingPotionRegeneration.name + regeneration));
-		if (nightVision != 0) list.add(StatCollector.translateToLocal(UpgradeRegistry.RingPotionNightVision.name + nightVision));
-		if (waterBreathing != 0) list.add(StatCollector.translateToLocal(UpgradeRegistry.RingPotionWaterBreathing.name + waterBreathing));
-		if (fireResistance != 0) list.add(StatCollector.translateToLocal(UpgradeRegistry.RingPotionFireResistance.name + fireResistance));
+		if (swiftness != 0) list.add(I18n.translateToLocal(UpgradeRegistry.RingPotionSwiftness.name + swiftness));
+		if (haste != 0) list.add(I18n.translateToLocal(UpgradeRegistry.RingPotionSwiftness.name + haste));
+		if (strength != 0) list.add(I18n.translateToLocal(UpgradeRegistry.RingPotionStrength.name + strength));
+		if (jumpBoost != 0) list.add(I18n.translateToLocal(UpgradeRegistry.RingPotionJumpBoost.name + jumpBoost));
+		if (regeneration != 0) list.add(I18n.translateToLocal(UpgradeRegistry.RingPotionRegeneration.name + regeneration));
+		if (nightVision != 0) list.add(I18n.translateToLocal(UpgradeRegistry.RingPotionNightVision.name + nightVision));
+		if (waterBreathing != 0) list.add(I18n.translateToLocal(UpgradeRegistry.RingPotionWaterBreathing.name + waterBreathing));
+		if (fireResistance != 0) list.add(I18n.translateToLocal(UpgradeRegistry.RingPotionFireResistance.name + fireResistance));
 	}
 
 	@SubscribeEvent
 	public void onLivingHurt(LivingHurtEvent event)
 	{
-		if (event.entityLiving instanceof EntityPlayer && event.source.getDamageType() == event.source.fall.getDamageType())
+		if (event.getEntityLiving() instanceof EntityPlayer && event.getSource().getDamageType() == DamageSource.fall.getDamageType())
 		{
-			EntityPlayer player = (EntityPlayer) event.entityLiving;
-			ItemStack ring1 = PlayerHandler.getPlayerBaubles(player).getStackInSlot(1);
-			ItemStack ring2 = PlayerHandler.getPlayerBaubles(player).getStackInSlot(2);
+			EntityPlayer player = (EntityPlayer) event.getEntityLiving();
+			ItemStack ring1 = BaublesApi.getBaubles(player).getStackInSlot(1);
+			ItemStack ring2 = BaublesApi.getBaubles(player).getStackInSlot(2);
 			int jumpLevel = 0;
 			if (ring1 != null && ring1.getItem() instanceof ItemRing) jumpLevel = Upgrade.getUpgradeLevel(ring1, UpgradeRegistry.RingPotionJumpBoost);
 			if (ring2 != null && ring2.getItem() instanceof ItemRing) jumpLevel = Math.max(jumpLevel, Upgrade.getUpgradeLevel(ring2, UpgradeRegistry.RingPotionJumpBoost));
-			event.ammount -= jumpLevel / 20;
+			event.setAmount(event.getAmount() - jumpLevel / 20);
 		}
 	}
 
 	@SubscribeEvent
 	public void updatePlayerStats(LivingUpdateEvent event)
 	{
-		if (event.entityLiving instanceof EntityPlayer)
+		if (event.getEntityLiving() instanceof EntityPlayer)
 		{
-			EntityPlayer player = (EntityPlayer) event.entityLiving;
-			ItemStack ring1 = PlayerHandler.getPlayerBaubles(player).getStackInSlot(1);
-			ItemStack ring2 = PlayerHandler.getPlayerBaubles(player).getStackInSlot(2);
+			EntityPlayer player = (EntityPlayer) event.getEntityLiving();
+			ItemStack ring1 = BaublesApi.getBaubles(player).getStackInSlot(1);
+			ItemStack ring2 = BaublesApi.getBaubles(player).getStackInSlot(2);
 			int swiftnessLevel = 0;
 			int strengthLevel = 0;
 			if (ring1 != null && ring1.getItem() instanceof ItemRing)
@@ -236,7 +240,7 @@ public class ItemRing extends ItemBauble
 				swiftnessLevel = Math.max(swiftnessLevel, Upgrade.getUpgradeLevel(ring2, UpgradeRegistry.RingPotionSwiftness));
 				strengthLevel = Math.max(strengthLevel, Upgrade.getUpgradeLevel(ring2, UpgradeRegistry.RingPotionStrength));
 			}
-			IAttributeInstance attribute = player.getAttributeMap().getAttributeInstance(SharedMonsterAttributes.movementSpeed);
+			IAttributeInstance attribute = player.getAttributeMap().getAttributeInstance(SharedMonsterAttributes.MOVEMENT_SPEED);
 			if (attribute != null)
 			{
 				if (swiftnessLevel != 0)
@@ -245,7 +249,7 @@ public class ItemRing extends ItemBauble
 					attribute.applyModifier(new AttributeModifier(speed.getID(), speed.getName() + swiftnessLevel, speed.getAmount() * swiftnessLevel, speed.getOperation()));
 				}
 			}
-			attribute = player.getAttributeMap().getAttributeInstance(SharedMonsterAttributes.attackDamage);
+			attribute = player.getAttributeMap().getAttributeInstance(SharedMonsterAttributes.ATTACK_DAMAGE);
 			if (attribute != null)
 			{
 				if (strengthLevel != 0)
@@ -260,23 +264,23 @@ public class ItemRing extends ItemBauble
 	@SubscribeEvent
 	public void onPlayerMine(BreakSpeed event)
 	{
-		EntityPlayer player = event.entityPlayer;
-		ItemStack ring1 = PlayerHandler.getPlayerBaubles(player).getStackInSlot(1);
-		ItemStack ring2 = PlayerHandler.getPlayerBaubles(player).getStackInSlot(2);
+		EntityPlayer player = event.getEntityPlayer();
+		ItemStack ring1 = BaublesApi.getBaubles(player).getStackInSlot(1);
+		ItemStack ring2 = BaublesApi.getBaubles(player).getStackInSlot(2);
 		int hasteLevel = 0;
 		if (ring1 != null && ring1.getItem() instanceof ItemRing) hasteLevel = Upgrade.getUpgradeLevel(ring1, UpgradeRegistry.RingPotionHaste);
 		if (ring2 != null && ring2.getItem() instanceof ItemRing) hasteLevel = Math.max(hasteLevel, Upgrade.getUpgradeLevel(ring2, UpgradeRegistry.RingPotionHaste));
-		event.newSpeed *= (1 + 0.01F * hasteLevel);
+		event.setNewSpeed(event.getNewSpeed() * (1 + 0.01F * hasteLevel));
 	}
 
 	@SubscribeEvent
 	public void onPlayerJump(LivingJumpEvent event)
 	{
-		if (event.entityLiving instanceof EntityPlayer)
+		if (event.getEntityLiving() instanceof EntityPlayer)
 		{
-			EntityPlayer player = (EntityPlayer) event.entityLiving;
-			ItemStack ring1 = PlayerHandler.getPlayerBaubles(player).getStackInSlot(1);
-			ItemStack ring2 = PlayerHandler.getPlayerBaubles(player).getStackInSlot(2);
+			EntityPlayer player = (EntityPlayer) event.getEntityLiving();
+			ItemStack ring1 = BaublesApi.getBaubles(player).getStackInSlot(1);
+			ItemStack ring2 = BaublesApi.getBaubles(player).getStackInSlot(2);
 			int jumpLevel = 0;
 			if (ring1 != null && ring1.getItem() instanceof ItemRing) jumpLevel = Upgrade.getUpgradeLevel(ring1, UpgradeRegistry.RingPotionJumpBoost);
 			if (ring2 != null && ring2.getItem() instanceof ItemRing) jumpLevel = Math.max(jumpLevel, Upgrade.getUpgradeLevel(ring2, UpgradeRegistry.RingPotionJumpBoost));

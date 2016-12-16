@@ -4,12 +4,13 @@ import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.client.resources.model.ModelResourceLocation;
+import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemSword;
 import net.minecraft.nbt.NBTTagCompound;
@@ -17,21 +18,20 @@ import net.minecraft.potion.Potion;
 import net.minecraft.potion.PotionEffect;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EntityDamageSource;
-import net.minecraft.util.StatCollector;
+import net.minecraft.util.text.translation.I18n;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import essenceMod.handlers.ConfigHandler;
-import essenceMod.handlers.compatibility.ThaumcraftHandler;
 import essenceMod.registry.ModArmory;
 import essenceMod.registry.crafting.upgrades.Upgrade;
 import essenceMod.registry.crafting.upgrades.UpgradeRegistry;
 import essenceMod.tabs.ModTabs;
 import essenceMod.utility.UtilityHelper;
 
+@SuppressWarnings("deprecation")
 public class ItemModSword extends ItemSword implements IUpgradeable
 {
 	public final ToolMaterial toolMaterial;
@@ -63,10 +63,10 @@ public class ItemModSword extends ItemSword implements IUpgradeable
 	}
 
 	@Override
-	public Multimap getAttributeModifiers(ItemStack item)
+	public Multimap<String, AttributeModifier> getAttributeModifiers(EntityEquipmentSlot slot, ItemStack item)
 	{
-		Multimap multimap = HashMultimap.create();
-		multimap.put(SharedMonsterAttributes.attackDamage.getAttributeUnlocalizedName(), new AttributeModifier(itemModifierUUID, "Weapon modifier", item.getTagCompound().getFloat("weaponDamage"), 0));
+		Multimap<String, AttributeModifier> multimap = HashMultimap.create();
+		multimap.put(SharedMonsterAttributes.ATTACK_DAMAGE.getAttributeUnlocalizedName(), new AttributeModifier(ATTACK_DAMAGE_MODIFIER, "Weapon modifier", item.getTagCompound().getFloat("weaponDamage"), 0));
 		return multimap;
 	}
 
@@ -158,52 +158,6 @@ public class ItemModSword extends ItemSword implements IUpgradeable
 		int knockback = Upgrade.getUpgradeLevel(item, UpgradeRegistry.WeaponKnockback);
 		if (knockback != 0) enemy.knockBack(player, weaponDamage, (player.posX - enemy.posX) * knockback, (player.posZ - enemy.posZ) * knockback);
 
-//		if (Loader.isModLoaded("DraconicEvolution") && ConfigHandler.draconicevolutionIntegration)
-//		{
-//			try
-//			{
-//				DraconicEvolutionHandler.doChaosDamage(item, (EntityPlayer) player, enemy, weaponDamage, false);
-//			}
-//			catch (Exception e)
-//			{}
-//		}
-//
-//		if (Loader.isModLoaded("ExtraUtilities") && ConfigHandler.extrautilitiesIntegration)
-//		{
-//			try
-//			{
-//				ExUHandler.doDivineDamage(item, (EntityPlayer) player, enemy, weaponDamage, false);
-//			}
-//			catch (Exception e)
-//			{}
-//		}
-//
-		if (Loader.isModLoaded("Thaumcraft") && ConfigHandler.thaumcraftIntegration)
-		{
-			try
-			{
-				ThaumcraftHandler.doTaintDamage(item, (EntityPlayer) player, enemy, weaponDamage, false);
-				ThaumcraftHandler.doTaintDoT(item, enemy);
-			}
-			catch (Exception e)
-			{}
-		}
-//
-//		if (Loader.isModLoaded("arsmagica2") /* && ConfigHandler.arsMagicaIntegration */)
-//		{
-//			try
-//			{
-//				ArsMagicaHandler.doFrostDamage(item, (EntityPlayer) player, enemy, weaponDamage, false);
-//				ArsMagicaHandler.doHolyDamage(item, (EntityPlayer) player, enemy, weaponDamage, false);
-//				ArsMagicaHandler.doLightningDamage(item, (EntityPlayer) player, enemy, weaponDamage, false);
-//				ArsMagicaHandler.doWindDamage(item, (EntityPlayer) player, enemy, weaponDamage, false);
-//				ArsMagicaHandler.doEntangle(item, enemy);
-//				ArsMagicaHandler.doFrostSlow(item, enemy);
-//			}
-//			catch (Exception e)
-//			{}
-//		}
-
 		return true;
 	}
 
@@ -213,16 +167,16 @@ public class ItemModSword extends ItemSword implements IUpgradeable
 	}
 
 	@Override
-	public void addInformation(ItemStack item, EntityPlayer entityPlayer, List list, boolean bool)
+	public void addInformation(ItemStack item, EntityPlayer entityPlayer, List<String> list, boolean bool)
 	{
 		if (!item.hasTagCompound()) onCreated(item, entityPlayer.worldObj, entityPlayer);
 		if (GuiScreen.isShiftKeyDown()) list.addAll(addShiftInfo(item));
 		else list.addAll(addNormalInfo(item));
 	}
 
-	private List addNormalInfo(ItemStack item)
+	private List<String> addNormalInfo(ItemStack item)
 	{
-		List list = new ArrayList();
+		List<String> list = new ArrayList<>();
 
 		int level = ItemModSword.getLevel(item);
 		int burn = Upgrade.getUpgradeLevel(item, UpgradeRegistry.WeaponFireDoT);
@@ -253,35 +207,35 @@ public class ItemModSword extends ItemSword implements IUpgradeable
 			list.add("Hold SHIFT for more information");
 			list.add("Level: " + UtilityHelper.toRoman(level));
 		}
-		if (burn != 0) list.add(StatCollector.translateToLocal(UpgradeRegistry.WeaponFireDoT.name) + " " + UtilityHelper.toRoman(burn));
-		if (poison != 0) list.add(StatCollector.translateToLocal(UpgradeRegistry.WeaponMagicDoT.name) + " " + UtilityHelper.toRoman(poison));
-		if (decay != 0) list.add(StatCollector.translateToLocal(UpgradeRegistry.WeaponWitherDoT.name) + " " + UtilityHelper.toRoman(decay));
-		if (flux != 0) list.add(StatCollector.translateToLocal(UpgradeRegistry.WeaponTaintDoT.name) + " " + UtilityHelper.toRoman(flux));
-		if (lifesteal != 0) list.add(StatCollector.translateToLocal(UpgradeRegistry.SwordLifesteal.name) + " " + UtilityHelper.toRoman(lifesteal));
-		if (knockback != 0) list.add(StatCollector.translateToLocal(UpgradeRegistry.WeaponKnockback.name) + " " + UtilityHelper.toRoman(knockback));
-		if (blind != 0) list.add(StatCollector.translateToLocal(UpgradeRegistry.WeaponBlind.name) + " " + UtilityHelper.toRoman(blind));
-		if (slow != 0) list.add(StatCollector.translateToLocal(UpgradeRegistry.WeaponSlow.name) + " " + UtilityHelper.toRoman(slow));
-		if (entangle != 0) list.add(StatCollector.translateToLocal(UpgradeRegistry.WeaponEntangled.name) + " " + UtilityHelper.toRoman(entangle));
-		if (frostSlow != 0) list.add(StatCollector.translateToLocal(UpgradeRegistry.WeaponFrostSlow.name) + " " + UtilityHelper.toRoman(frostSlow));
-		if (pierce != 0) list.add(StatCollector.translateToLocal(UpgradeRegistry.WeaponArmorPiercing.name) + " " + UtilityHelper.toRoman(pierce));
-		if (damage != 0) list.add(StatCollector.translateToLocal(UpgradeRegistry.WeaponPhysicalDamage.name) + " " + UtilityHelper.toRoman(damage));
-		if (magic != 0) list.add(StatCollector.translateToLocal(UpgradeRegistry.WeaponMagicDamage.name) + " " + UtilityHelper.toRoman(magic));
-		if (fire != 0) list.add(StatCollector.translateToLocal(UpgradeRegistry.WeaponFireDamage.name) + " " + UtilityHelper.toRoman(fire));
-		if (wither != 0) list.add(StatCollector.translateToLocal(UpgradeRegistry.WeaponWitherDamage.name) + " " + UtilityHelper.toRoman(wither));
-		if (chaos != 0) list.add(StatCollector.translateToLocal(UpgradeRegistry.WeaponChaosDamage.name) + " " + UtilityHelper.toRoman(chaos));
-		if (divine != 0) list.add(StatCollector.translateToLocal(UpgradeRegistry.WeaponDivineDamage.name) + " " + UtilityHelper.toRoman(divine));
-		if (taint != 0) list.add(StatCollector.translateToLocal(UpgradeRegistry.WeaponTaintDamage.name) + " " + UtilityHelper.toRoman(taint));
-		if (frost != 0) list.add(StatCollector.translateToLocal(UpgradeRegistry.WeaponFrostDamage.name) + " " + UtilityHelper.toRoman(frost));
-		if (holy != 0) list.add(StatCollector.translateToLocal(UpgradeRegistry.WeaponHolyDamage.name) + " " + UtilityHelper.toRoman(holy));
-		if (lightning != 0) list.add(StatCollector.translateToLocal(UpgradeRegistry.WeaponLightningDamage.name) + " " + UtilityHelper.toRoman(lightning));
-		if (wind != 0) list.add(StatCollector.translateToLocal(UpgradeRegistry.WeaponWindDamage.name) + " " + UtilityHelper.toRoman(wind));
+		if (burn != 0) list.add(I18n.translateToLocal(UpgradeRegistry.WeaponFireDoT.name) + " " + UtilityHelper.toRoman(burn));
+		if (poison != 0) list.add(I18n.translateToLocal(UpgradeRegistry.WeaponMagicDoT.name) + " " + UtilityHelper.toRoman(poison));
+		if (decay != 0) list.add(I18n.translateToLocal(UpgradeRegistry.WeaponWitherDoT.name) + " " + UtilityHelper.toRoman(decay));
+		if (flux != 0) list.add(I18n.translateToLocal(UpgradeRegistry.WeaponTaintDoT.name) + " " + UtilityHelper.toRoman(flux));
+		if (lifesteal != 0) list.add(I18n.translateToLocal(UpgradeRegistry.SwordLifesteal.name) + " " + UtilityHelper.toRoman(lifesteal));
+		if (knockback != 0) list.add(I18n.translateToLocal(UpgradeRegistry.WeaponKnockback.name) + " " + UtilityHelper.toRoman(knockback));
+		if (blind != 0) list.add(I18n.translateToLocal(UpgradeRegistry.WeaponBlind.name) + " " + UtilityHelper.toRoman(blind));
+		if (slow != 0) list.add(I18n.translateToLocal(UpgradeRegistry.WeaponSlow.name) + " " + UtilityHelper.toRoman(slow));
+		if (entangle != 0) list.add(I18n.translateToLocal(UpgradeRegistry.WeaponEntangled.name) + " " + UtilityHelper.toRoman(entangle));
+		if (frostSlow != 0) list.add(I18n.translateToLocal(UpgradeRegistry.WeaponFrostSlow.name) + " " + UtilityHelper.toRoman(frostSlow));
+		if (pierce != 0) list.add(I18n.translateToLocal(UpgradeRegistry.WeaponArmorPiercing.name) + " " + UtilityHelper.toRoman(pierce));
+		if (damage != 0) list.add(I18n.translateToLocal(UpgradeRegistry.WeaponPhysicalDamage.name) + " " + UtilityHelper.toRoman(damage));
+		if (magic != 0) list.add(I18n.translateToLocal(UpgradeRegistry.WeaponMagicDamage.name) + " " + UtilityHelper.toRoman(magic));
+		if (fire != 0) list.add(I18n.translateToLocal(UpgradeRegistry.WeaponFireDamage.name) + " " + UtilityHelper.toRoman(fire));
+		if (wither != 0) list.add(I18n.translateToLocal(UpgradeRegistry.WeaponWitherDamage.name) + " " + UtilityHelper.toRoman(wither));
+		if (chaos != 0) list.add(I18n.translateToLocal(UpgradeRegistry.WeaponChaosDamage.name) + " " + UtilityHelper.toRoman(chaos));
+		if (divine != 0) list.add(I18n.translateToLocal(UpgradeRegistry.WeaponDivineDamage.name) + " " + UtilityHelper.toRoman(divine));
+		if (taint != 0) list.add(I18n.translateToLocal(UpgradeRegistry.WeaponTaintDamage.name) + " " + UtilityHelper.toRoman(taint));
+		if (frost != 0) list.add(I18n.translateToLocal(UpgradeRegistry.WeaponFrostDamage.name) + " " + UtilityHelper.toRoman(frost));
+		if (holy != 0) list.add(I18n.translateToLocal(UpgradeRegistry.WeaponHolyDamage.name) + " " + UtilityHelper.toRoman(holy));
+		if (lightning != 0) list.add(I18n.translateToLocal(UpgradeRegistry.WeaponLightningDamage.name) + " " + UtilityHelper.toRoman(lightning));
+		if (wind != 0) list.add(I18n.translateToLocal(UpgradeRegistry.WeaponWindDamage.name) + " " + UtilityHelper.toRoman(wind));
 
 		return list;
 	}
 
-	private List addShiftInfo(ItemStack item)
+	private List<String> addShiftInfo(ItemStack item)
 	{
-		List list = new ArrayList();
+		List<String> list = new ArrayList<>();
 
 		int level = ItemModSword.getLevel(item);
 		int burn = Upgrade.getUpgradeLevel(item, UpgradeRegistry.WeaponFireDoT);
@@ -308,71 +262,71 @@ public class ItemModSword extends ItemSword implements IUpgradeable
 		int wind = Upgrade.getUpgradeLevel(item, UpgradeRegistry.WeaponWindDamage);
 
 		if (level != 0) list.add("Level: " + UtilityHelper.toRoman(level));
-		if (burn != 0) list.add(StatCollector.translateToLocal(UpgradeRegistry.WeaponFireDoT.name) + ": Attacks light enemies on fire for " + burn + " seconds.");
-		if (poison != 0) list.add(StatCollector.translateToLocal(UpgradeRegistry.WeaponMagicDoT.name) + ": Attacks give Poison " + UtilityHelper.toRoman(poison) + " for 5 seconds.");
-		if (decay != 0) list.add(StatCollector.translateToLocal(UpgradeRegistry.WeaponWitherDoT.name) + ": Attacks give Wither " + UtilityHelper.toRoman(decay) + " for 5 seconds.");
-		if (flux != 0) list.add(StatCollector.translateToLocal(UpgradeRegistry.WeaponTaintDoT.name) + ": Attacks taint enemies for " + flux + " seconds.");
-		if (lifesteal != 0) list.add(StatCollector.translateToLocal(UpgradeRegistry.SwordLifesteal.name) + ": Gain " + UtilityHelper.round(lifesteal * 0.25F, 2) + " hearts per attack.");
-		if (knockback != 0) list.add(StatCollector.translateToLocal(UpgradeRegistry.WeaponKnockback.name) + ": Knock enemies away on hit.");
-		if (blind != 0) list.add(StatCollector.translateToLocal(UpgradeRegistry.WeaponBlind.name) + ": Attacks blind enemies for " + blind + " seconds.");
-		if (slow != 0) list.add(StatCollector.translateToLocal(UpgradeRegistry.WeaponSlow.name) + ": Attacks slow enemies for " + slow + " seconds.");
-		if (entangle != 0) list.add(StatCollector.translateToLocal(UpgradeRegistry.WeaponEntangled.name) + ": Attacks entangle enemies for " + entangle * 2 + " ticks.");
-		if (frostSlow != 0) list.add(StatCollector.translateToLocal(UpgradeRegistry.WeaponFrostSlow.name) + ": Attacks heavily slow enemies for " + frostSlow + " seconds.");
-		if (pierce != 0) list.add(StatCollector.translateToLocal(UpgradeRegistry.WeaponArmorPiercing.name) + ": Attacks ignore " + pierce * 20 + "% of armor.");
+		if (burn != 0) list.add(I18n.translateToLocal(UpgradeRegistry.WeaponFireDoT.name) + ": Attacks light enemies on fire for " + burn + " seconds.");
+		if (poison != 0) list.add(I18n.translateToLocal(UpgradeRegistry.WeaponMagicDoT.name) + ": Attacks give Poison " + UtilityHelper.toRoman(poison) + " for 5 seconds.");
+		if (decay != 0) list.add(I18n.translateToLocal(UpgradeRegistry.WeaponWitherDoT.name) + ": Attacks give Wither " + UtilityHelper.toRoman(decay) + " for 5 seconds.");
+		if (flux != 0) list.add(I18n.translateToLocal(UpgradeRegistry.WeaponTaintDoT.name) + ": Attacks taint enemies for " + flux + " seconds.");
+		if (lifesteal != 0) list.add(I18n.translateToLocal(UpgradeRegistry.SwordLifesteal.name) + ": Gain " + UtilityHelper.round(lifesteal * 0.25F, 2) + " hearts per attack.");
+		if (knockback != 0) list.add(I18n.translateToLocal(UpgradeRegistry.WeaponKnockback.name) + ": Knock enemies away on hit.");
+		if (blind != 0) list.add(I18n.translateToLocal(UpgradeRegistry.WeaponBlind.name) + ": Attacks blind enemies for " + blind + " seconds.");
+		if (slow != 0) list.add(I18n.translateToLocal(UpgradeRegistry.WeaponSlow.name) + ": Attacks slow enemies for " + slow + " seconds.");
+		if (entangle != 0) list.add(I18n.translateToLocal(UpgradeRegistry.WeaponEntangled.name) + ": Attacks entangle enemies for " + entangle * 2 + " ticks.");
+		if (frostSlow != 0) list.add(I18n.translateToLocal(UpgradeRegistry.WeaponFrostSlow.name) + ": Attacks heavily slow enemies for " + frostSlow + " seconds.");
+		if (pierce != 0) list.add(I18n.translateToLocal(UpgradeRegistry.WeaponArmorPiercing.name) + ": Attacks ignore " + pierce * 20 + "% of armor.");
 		if (damage != 0)
 		{
-			if (ConfigHandler.isNormalDamagePercent) list.add(StatCollector.translateToLocal(UpgradeRegistry.WeaponPhysicalDamage.name) + ": Attacks deal " + damage * ConfigHandler.normalDamageMulti * 100 + "% increased damage.");
-			else list.add(StatCollector.translateToLocal(UpgradeRegistry.WeaponPhysicalDamage.name) + ": Attacks deal " + damage * ConfigHandler.normalDamageAmount + " extra damage.");
+			if (ConfigHandler.isNormalDamagePercent) list.add(I18n.translateToLocal(UpgradeRegistry.WeaponPhysicalDamage.name) + ": Attacks deal " + damage * ConfigHandler.normalDamageMulti * 100 + "% increased damage.");
+			else list.add(I18n.translateToLocal(UpgradeRegistry.WeaponPhysicalDamage.name) + ": Attacks deal " + damage * ConfigHandler.normalDamageAmount + " extra damage.");
 		}
 		if (magic != 0)
 		{
-			if (ConfigHandler.isMagicDamagePercent) list.add(StatCollector.translateToLocal(UpgradeRegistry.WeaponMagicDamage.name) + ": Attacks deal " + magic * ConfigHandler.magicDamageMulti * 100 + "% more damage as magic damage.");
-			else list.add(StatCollector.translateToLocal(UpgradeRegistry.WeaponMagicDamage.name) + ": Attacks deal " + magic * ConfigHandler.magicDamageAmount + " extra damage as magic damage.");
+			if (ConfigHandler.isMagicDamagePercent) list.add(I18n.translateToLocal(UpgradeRegistry.WeaponMagicDamage.name) + ": Attacks deal " + magic * ConfigHandler.magicDamageMulti * 100 + "% more damage as magic damage.");
+			else list.add(I18n.translateToLocal(UpgradeRegistry.WeaponMagicDamage.name) + ": Attacks deal " + magic * ConfigHandler.magicDamageAmount + " extra damage as magic damage.");
 		}
 		if (fire != 0)
 		{
-			if (ConfigHandler.isFireDamagePercent) list.add(StatCollector.translateToLocal(UpgradeRegistry.WeaponFireDamage.name) + ": Attacks deal " + fire * ConfigHandler.fireDamageMulti * 100 + "% more damage as fire damage.");
-			else list.add(StatCollector.translateToLocal(UpgradeRegistry.WeaponFireDamage.name) + ": Attacks deal " + fire * ConfigHandler.fireDamageAmount + " extra damage as fire damage.");
+			if (ConfigHandler.isFireDamagePercent) list.add(I18n.translateToLocal(UpgradeRegistry.WeaponFireDamage.name) + ": Attacks deal " + fire * ConfigHandler.fireDamageMulti * 100 + "% more damage as fire damage.");
+			else list.add(I18n.translateToLocal(UpgradeRegistry.WeaponFireDamage.name) + ": Attacks deal " + fire * ConfigHandler.fireDamageAmount + " extra damage as fire damage.");
 		}
 		if (wither != 0)
 		{
-			if (ConfigHandler.isWitherDamagePercent) list.add(StatCollector.translateToLocal(UpgradeRegistry.WeaponWitherDamage.name) + ": Attacks deal " + wither * ConfigHandler.witherDamageMulti * 100 + "% more damage as wither damage.");
-			else list.add(StatCollector.translateToLocal(UpgradeRegistry.WeaponWitherDamage.name) + ": Attacks deal " + wither * ConfigHandler.witherDamageAmount + " extra damage as wither damage.");
+			if (ConfigHandler.isWitherDamagePercent) list.add(I18n.translateToLocal(UpgradeRegistry.WeaponWitherDamage.name) + ": Attacks deal " + wither * ConfigHandler.witherDamageMulti * 100 + "% more damage as wither damage.");
+			else list.add(I18n.translateToLocal(UpgradeRegistry.WeaponWitherDamage.name) + ": Attacks deal " + wither * ConfigHandler.witherDamageAmount + " extra damage as wither damage.");
 		}
 		if (chaos != 0)
 		{
-			if (ConfigHandler.isChaosDamagePercent) list.add(StatCollector.translateToLocal(UpgradeRegistry.WeaponChaosDamage.name) + ": Attacks deal " + chaos * ConfigHandler.chaosDamageMulti * 100 + "% more damage as chaos damage.");
-			else list.add(StatCollector.translateToLocal(UpgradeRegistry.WeaponChaosDamage.name) + ": Attacks deal " + chaos * ConfigHandler.chaosDamageAmount + " extra damage as chaos damage.");
+			if (ConfigHandler.isChaosDamagePercent) list.add(I18n.translateToLocal(UpgradeRegistry.WeaponChaosDamage.name) + ": Attacks deal " + chaos * ConfigHandler.chaosDamageMulti * 100 + "% more damage as chaos damage.");
+			else list.add(I18n.translateToLocal(UpgradeRegistry.WeaponChaosDamage.name) + ": Attacks deal " + chaos * ConfigHandler.chaosDamageAmount + " extra damage as chaos damage.");
 		}
 		if (divine != 0)
 		{
-			if (ConfigHandler.isDivineDamagePercent) list.add(StatCollector.translateToLocal(UpgradeRegistry.WeaponDivineDamage.name) + ": Attacks deal " + divine * ConfigHandler.divineDamageMulti * 100 + "% more damage as divine damage.");
-			else list.add(StatCollector.translateToLocal(UpgradeRegistry.WeaponDivineDamage.name) + ": Attacks deal " + divine * ConfigHandler.divineDamageAmount + " extra damage as divine damage.");
+			if (ConfigHandler.isDivineDamagePercent) list.add(I18n.translateToLocal(UpgradeRegistry.WeaponDivineDamage.name) + ": Attacks deal " + divine * ConfigHandler.divineDamageMulti * 100 + "% more damage as divine damage.");
+			else list.add(I18n.translateToLocal(UpgradeRegistry.WeaponDivineDamage.name) + ": Attacks deal " + divine * ConfigHandler.divineDamageAmount + " extra damage as divine damage.");
 		}
 		if (taint != 0)
 		{
-			if (ConfigHandler.isDivineDamagePercent) list.add(StatCollector.translateToLocal(UpgradeRegistry.WeaponTaintDamage.name) + ": Attacks deal " + taint * ConfigHandler.taintDamageMulti * 100 + "% more damage as taint damage.");
-			else list.add(StatCollector.translateToLocal(UpgradeRegistry.WeaponTaintDamage.name) + ": Attacks deal " + taint * ConfigHandler.taintDamageAmount + " extra damage as taint damage.");
+			if (ConfigHandler.isDivineDamagePercent) list.add(I18n.translateToLocal(UpgradeRegistry.WeaponTaintDamage.name) + ": Attacks deal " + taint * ConfigHandler.taintDamageMulti * 100 + "% more damage as taint damage.");
+			else list.add(I18n.translateToLocal(UpgradeRegistry.WeaponTaintDamage.name) + ": Attacks deal " + taint * ConfigHandler.taintDamageAmount + " extra damage as taint damage.");
 		}
 		if (frost != 0)
 		{
-			if (ConfigHandler.isDivineDamagePercent) list.add(StatCollector.translateToLocal(UpgradeRegistry.WeaponFrostDamage.name) + ": Attacks deal " + frost * ConfigHandler.frostDamageMulti * 100 + "% more damage as frost damage.");
-			else list.add(StatCollector.translateToLocal(UpgradeRegistry.WeaponFrostDamage.name) + ": Attacks deal " + frost * ConfigHandler.frostDamageAmount + " extra damage as frost damage.");
+			if (ConfigHandler.isDivineDamagePercent) list.add(I18n.translateToLocal(UpgradeRegistry.WeaponFrostDamage.name) + ": Attacks deal " + frost * ConfigHandler.frostDamageMulti * 100 + "% more damage as frost damage.");
+			else list.add(I18n.translateToLocal(UpgradeRegistry.WeaponFrostDamage.name) + ": Attacks deal " + frost * ConfigHandler.frostDamageAmount + " extra damage as frost damage.");
 		}
 		if (holy != 0)
 		{
-			if (ConfigHandler.isDivineDamagePercent) list.add(StatCollector.translateToLocal(UpgradeRegistry.WeaponHolyDamage.name) + ": Attacks deal " + holy * ConfigHandler.holyDamageMulti * 100 + "% more damage as holy damage.");
-			else list.add(StatCollector.translateToLocal(UpgradeRegistry.WeaponHolyDamage.name) + ": Attacks deal " + holy * ConfigHandler.holyDamageAmount + " extra damage as holy damage.");
+			if (ConfigHandler.isDivineDamagePercent) list.add(I18n.translateToLocal(UpgradeRegistry.WeaponHolyDamage.name) + ": Attacks deal " + holy * ConfigHandler.holyDamageMulti * 100 + "% more damage as holy damage.");
+			else list.add(I18n.translateToLocal(UpgradeRegistry.WeaponHolyDamage.name) + ": Attacks deal " + holy * ConfigHandler.holyDamageAmount + " extra damage as holy damage.");
 		}
 		if (lightning != 0)
 		{
-			if (ConfigHandler.isDivineDamagePercent) list.add(StatCollector.translateToLocal(UpgradeRegistry.WeaponLightningDamage.name) + ": Attacks deal " + lightning * ConfigHandler.lightningDamageMulti * 100 + "% more damage as lightning damage.");
-			else list.add(StatCollector.translateToLocal(UpgradeRegistry.WeaponLightningDamage.name) + ": Attacks deal " + lightning * ConfigHandler.lightningDamageAmount + " extra damage as lightning damage.");
+			if (ConfigHandler.isDivineDamagePercent) list.add(I18n.translateToLocal(UpgradeRegistry.WeaponLightningDamage.name) + ": Attacks deal " + lightning * ConfigHandler.lightningDamageMulti * 100 + "% more damage as lightning damage.");
+			else list.add(I18n.translateToLocal(UpgradeRegistry.WeaponLightningDamage.name) + ": Attacks deal " + lightning * ConfigHandler.lightningDamageAmount + " extra damage as lightning damage.");
 		}
 		if (wind != 0)
 		{
-			if (ConfigHandler.isDivineDamagePercent) list.add(StatCollector.translateToLocal(UpgradeRegistry.WeaponWindDamage.name) + ": Attacks deal " + wind * ConfigHandler.windDamageMulti * 100 + "% more damage as wind damage.");
-			else list.add(StatCollector.translateToLocal(UpgradeRegistry.WeaponWindDamage.name) + ": Attacks deal " + wind * ConfigHandler.windDamageAmount + " extra damage as wind damage.");
+			if (ConfigHandler.isDivineDamagePercent) list.add(I18n.translateToLocal(UpgradeRegistry.WeaponWindDamage.name) + ": Attacks deal " + wind * ConfigHandler.windDamageMulti * 100 + "% more damage as wind damage.");
+			else list.add(I18n.translateToLocal(UpgradeRegistry.WeaponWindDamage.name) + ": Attacks deal " + wind * ConfigHandler.windDamageAmount + " extra damage as wind damage.");
 		}
 		return list;
 	}

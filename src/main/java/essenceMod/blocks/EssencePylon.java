@@ -6,15 +6,18 @@ import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.resources.model.ModelResourceLocation;
+import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.BlockPos;
+import net.minecraft.util.EnumBlockRenderType;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.EnumHand;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.client.model.ModelLoader;
@@ -28,7 +31,7 @@ public class EssencePylon extends BlockContainer implements IUpgradeable, ITileE
 {
 	public EssencePylon()
 	{
-		super(Material.rock);
+		super(Material.ROCK);
 		setCreativeTab(ModTabs.tabEssence);
 		setHardness(5.0F);
 		setResistance(10.0F);
@@ -41,9 +44,9 @@ public class EssencePylon extends BlockContainer implements IUpgradeable, ITileE
 	}
 	
 	@Override
-	public int getRenderType()
+	public EnumBlockRenderType getRenderType(IBlockState state)
 	{
-		return 3;
+		return EnumBlockRenderType.MODEL;
 	}
 
 	@SideOnly(Side.CLIENT)
@@ -55,37 +58,34 @@ public class EssencePylon extends BlockContainer implements IUpgradeable, ITileE
 	
 	@Override
 	@SideOnly(Side.CLIENT)
-	public boolean shouldSideBeRendered(IBlockAccess worldIn, BlockPos pos, EnumFacing side)
+	public boolean shouldSideBeRendered(IBlockState state, IBlockAccess worldIn, BlockPos pos, EnumFacing side)
 	{
 		return false;
 	}
 
 	@Override
-	public boolean isOpaqueCube()
+	public boolean isOpaqueCube(IBlockState state)
 	{
 		return false;
 	}
 
 	@Override
-	public boolean onBlockActivated(World world, BlockPos pos, IBlockState state, EntityPlayer player, EnumFacing side, float par7, float par8, float par9)
+	public boolean onBlockActivated(World world, BlockPos pos, IBlockState state, EntityPlayer player, EnumHand hand, ItemStack stack, EnumFacing side, float hitX, float hitY, float hitZ)
 	{
 		if (world.isRemote) return true;
 		TileEntity tileEntity = world.getTileEntity(pos);
 		if (tileEntity == null || !(tileEntity instanceof TileEntityEssencePylon)) return true;
 		TileEntityEssencePylon pylonEntity = (TileEntityEssencePylon) tileEntity;
 		
-		world.markBlockForUpdate(pos);
 		pylonEntity.markDirty();
 		
 		ItemStack item = pylonEntity.getStackInSlot(0);
-		ItemStack playerItem = player.getCurrentEquippedItem();
+		ItemStack playerItem = player.getHeldItem(player.getActiveHand());
 		if (item != null && item.stackSize > 0)
 		{
 			EntityItem itemEntity = new EntityItem(world, player.posX, player.posY + player.getDefaultEyeHeight() / 2.0F, player.posZ, item.copy());
 			world.spawnEntityInWorld(itemEntity);
 			pylonEntity.setInventorySlotContents(0, null);
-			
-			world.playSoundEffect(pos.getX(), pos.getY(), pos.getZ(), "random.pop", 0.2F, ((world.rand.nextFloat() - world.rand.nextFloat()) * 0.7F + 1.0F) * 1.5F);
 			
 			return true;
 		}
@@ -94,8 +94,8 @@ public class EssencePylon extends BlockContainer implements IUpgradeable, ITileE
 			ItemStack tempItem = playerItem.splitStack(1);
 			pylonEntity.setInventorySlotContents(0, tempItem);
 			
-			if (playerItem.stackSize == 0) player.setCurrentItemOrArmor(0, null);
-			else player.setCurrentItemOrArmor(0, playerItem);
+			if (playerItem.stackSize == 0) player.setItemStackToSlot(EntityEquipmentSlot.MAINHAND, null);
+			else player.setItemStackToSlot(EntityEquipmentSlot.MAINHAND, playerItem);
 			
 			return true;
 		}

@@ -1,6 +1,8 @@
 package essenceMod.registry;
 
 import net.minecraft.enchantment.Enchantment;
+import net.minecraft.init.SoundEvents;
+import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.item.Item;
 import net.minecraft.item.Item.ToolMaterial;
 import net.minecraft.item.ItemArmor.ArmorMaterial;
@@ -23,7 +25,7 @@ public class ModArmory
 	public static final Enchantment shardLooter = new EnchantmentShard(ConfigHandler.shardEnchantID, 5);
 	
 	public static ToolMaterial INFUSED = EnumHelper.addToolMaterial("INFUSED", 6, 1500, 10.0F, 6.0F, 20);
-	public static ArmorMaterial AINFUSED = EnumHelper.addArmorMaterial("INFUSED", "infused", 1500, new int[] { 5, 8, 7, 4 }, 20);
+	public static ArmorMaterial AINFUSED = EnumHelper.addArmorMaterial("INFUSED", "infused", 1500, new int[] { 5, 8, 7, 4 }, 2, SoundEvents.ITEM_ARMOR_EQUIP_DIAMOND, 20);
 
 	public static Item infusedSword = new ItemModSword(INFUSED).setUnlocalizedName("infusedSword");
 	
@@ -31,10 +33,10 @@ public class ModArmory
 
 	public static Item infusedBow = new ItemModBow().setUnlocalizedName("infusedBow");
 
-	public static Item infusedHelm = new ItemModArmor(AINFUSED, 0).setUnlocalizedName("infusedHelm");
-	public static Item infusedPlate = new ItemModArmor(AINFUSED, 1).setUnlocalizedName("infusedPlate");
-	public static Item infusedPants = new ItemModArmor(AINFUSED, 2).setUnlocalizedName("infusedPants");
-	public static Item infusedBoots = new ItemModArmor(AINFUSED, 3).setUnlocalizedName("infusedBoots");
+	public static Item infusedHelm = new ItemModArmor(AINFUSED, EntityEquipmentSlot.HEAD).setUnlocalizedName("infusedHelm");
+	public static Item infusedPlate = new ItemModArmor(AINFUSED, EntityEquipmentSlot.CHEST).setUnlocalizedName("infusedPlate");
+	public static Item infusedPants = new ItemModArmor(AINFUSED, EntityEquipmentSlot.LEGS).setUnlocalizedName("infusedPants");
+	public static Item infusedBoots = new ItemModArmor(AINFUSED, EntityEquipmentSlot.FEET).setUnlocalizedName("infusedBoots");
 
 	public static Item infusedRing = new ItemRing().setUnlocalizedName("infusedRing");
 	public static Item infusedBelt = new ItemBelt().setUnlocalizedName("infusedBelt");

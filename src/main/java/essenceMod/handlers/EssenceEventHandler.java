@@ -10,13 +10,14 @@ import net.minecraft.entity.boss.EntityWither;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.monster.EntityMob;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.potion.Potion;
 import net.minecraft.potion.PotionEffect;
 import net.minecraft.util.DamageSource;
-import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.text.TextFormatting;
 import net.minecraftforge.client.event.TextureStitchEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.living.LivingDropsEvent;
@@ -27,8 +28,7 @@ import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
-import baubles.common.lib.PlayerHandler;
-import essenceMod.entities.boss.EntityBoss;
+import baubles.api.BaublesApi;
 import essenceMod.items.ItemModArmor;
 import essenceMod.items.ItemModSword;
 import essenceMod.items.ItemShardContainer;
@@ -54,91 +54,92 @@ public class EssenceEventHandler
 	@SubscribeEvent(priority = EventPriority.NORMAL, receiveCanceled = true)
 	public void onLivingDropsEvent(LivingDropsEvent event)
 	{
-		if (event.entityLiving instanceof EntityBoss)
+		if (event.getEntityLiving() instanceof EntityDragon && rand.nextInt(100) < ConfigHandler.dragonShardChance * 100)
 		{
-			if (event.entityLiving instanceof EntityDragon && rand.nextInt(100) < ConfigHandler.dragonShardChance * 100)
+			int shardCount = ConfigHandler.dragonShardCount;
+
+			if (event.getSource().getEntity() != null && event.getSource().getEntity() instanceof EntityPlayer)
 			{
-				int shardCount = ConfigHandler.dragonShardCount;
-
-				if (event.source.getEntity() != null && event.source.getEntity() instanceof EntityPlayer)
+				EntityPlayer player = (EntityPlayer) event.getSource().getEntity();
+				ItemStack weapon = player.getHeldItem(player.getActiveHand());
+				if (weapon != null && EnchantmentHelper.getEnchantmentLevel(ModArmory.shardLooter, weapon) == 1)
 				{
-					EntityPlayer player = (EntityPlayer) event.source.getEntity();
-					ItemStack weapon = player.getCurrentEquippedItem();
-					if (weapon != null && EnchantmentHelper.getEnchantmentLevel(ModArmory.shardLooter.effectId, weapon) == 1)
+					int amuletLevel = 0;
+					ItemStack amulet = BaublesApi.getBaubles(player).getStackInSlot(0);
+					if (amulet != null && amulet.getItem() instanceof ItemAmulet)
 					{
-						int amuletLevel = 0;
-						ItemStack amulet = PlayerHandler.getPlayerBaubles(player).getStackInSlot(0);
-						if (amulet != null && amulet.getItem() instanceof ItemAmulet)
-						{
-							amuletLevel = Upgrade.getUpgradeLevel(amulet, "AmuletLooting");
-						}
-						amuletLevel = Math.max(amuletLevel, Upgrade.getUpgradeLevel(weapon, UpgradeRegistry.ShardSwordLooting));
-						shardCount *= (1 + amuletLevel);
+						amuletLevel = Upgrade.getUpgradeLevel(amulet, "AmuletLooting");
 					}
+					amuletLevel = Math.max(amuletLevel, Upgrade.getUpgradeLevel(weapon, UpgradeRegistry.ShardSwordLooting));
+					shardCount *= (1 + amuletLevel);
 				}
-
-				while (shardCount > 64)
-				{
-					event.drops.add(new EntityItem(event.entity.worldObj, event.entity.posX, event.entity.posY, event.entity.posZ, new ItemStack(ModItems.infusedShard, 64)));
-					shardCount -= 64;
-				}
-				if (shardCount != 0) event.drops.add(new EntityItem(event.entity.worldObj, event.entity.posX, event.entity.posY, event.entity.posZ, new ItemStack(ModItems.infusedShard, shardCount)));
 			}
 
-			else if (event.entityLiving instanceof EntityWither && rand.nextInt(100) < ConfigHandler.witherShardChance * 100)
+			while (shardCount > 64)
 			{
-				int shardCount = ConfigHandler.witherShardCount;
-
-				if (event.source.getEntity() != null && event.source.getEntity() instanceof EntityPlayer)
-				{
-					EntityPlayer player = (EntityPlayer) event.source.getEntity();
-					ItemStack weapon = player.getCurrentEquippedItem();
-					if (weapon != null && EnchantmentHelper.getEnchantmentLevel(ModArmory.shardLooter.effectId, weapon) == 1)
-					{
-						int amuletLevel = 0;
-						ItemStack amulet = PlayerHandler.getPlayerBaubles(player).getStackInSlot(0);
-						if (amulet != null && amulet.getItem() instanceof ItemAmulet)
-						{
-							amuletLevel = Upgrade.getUpgradeLevel(amulet, "AmuletLooting");
-						}
-						amuletLevel = Math.max(amuletLevel, Upgrade.getUpgradeLevel(weapon, UpgradeRegistry.ShardSwordLooting));
-						shardCount *= (1 + amuletLevel);
-					}
-				}
-
-				while (shardCount > 64)
-				{
-					event.drops.add(new EntityItem(event.entity.worldObj, event.entity.posX, event.entity.posY, event.entity.posZ, new ItemStack(ModItems.infusedShard, 64)));
-					shardCount -= 64;
-				}
-				if (shardCount != 0) event.drops.add(new EntityItem(event.entity.worldObj, event.entity.posX, event.entity.posY, event.entity.posZ, new ItemStack(ModItems.infusedShard, shardCount)));
+				event.getDrops().add(new EntityItem(event.getEntity().worldObj, event.getEntity().posX, event.getEntity().posY, event.getEntity().posZ, new ItemStack(ModItems.infusedShard, 64)));
+				shardCount -= 64;
 			}
+			if (shardCount != 0)
+				event.getDrops().add(new EntityItem(event.getEntity().worldObj, event.getEntity().posX, event.getEntity().posY, event.getEntity().posZ, new ItemStack(ModItems.infusedShard, shardCount)));
 		}
 
-		else if (event.entityLiving instanceof EntityMob)
+		else if (event.getEntityLiving() instanceof EntityWither && rand.nextInt(100) < ConfigHandler.witherShardChance * 100)
 		{
-			if (event.source.getEntity() != null && event.source.getEntity() instanceof EntityPlayer)
+			int shardCount = ConfigHandler.witherShardCount;
+
+			if (event.getSource().getEntity() != null && event.getSource().getEntity() instanceof EntityPlayer)
+			{
+				EntityPlayer player = (EntityPlayer) event.getSource().getEntity();
+				ItemStack weapon = player.getHeldItem(player.getActiveHand());
+				if (weapon != null && EnchantmentHelper.getEnchantmentLevel(ModArmory.shardLooter, weapon) == 1)
+				{
+					int amuletLevel = 0;
+					ItemStack amulet = BaublesApi.getBaubles(player).getStackInSlot(0);
+					if (amulet != null && amulet.getItem() instanceof ItemAmulet)
+					{
+						amuletLevel = Upgrade.getUpgradeLevel(amulet, "AmuletLooting");
+					}
+					amuletLevel = Math.max(amuletLevel, Upgrade.getUpgradeLevel(weapon, UpgradeRegistry.ShardSwordLooting));
+					shardCount *= (1 + amuletLevel);
+				}
+			}
+
+			while (shardCount > 64)
+			{
+				event.getDrops().add(new EntityItem(event.getEntity().worldObj, event.getEntity().posX, event.getEntity().posY, event.getEntity().posZ, new ItemStack(ModItems.infusedShard, 64)));
+				shardCount -= 64;
+			}
+			if (shardCount != 0)
+				event.getDrops().add(new EntityItem(event.getEntity().worldObj, event.getEntity().posX, event.getEntity().posY, event.getEntity().posZ, new ItemStack(ModItems.infusedShard, shardCount)));
+		}
+
+		else if (event.getEntityLiving() instanceof EntityMob)
+		{
+			if (event.getSource().getEntity() != null && event.getSource().getEntity() instanceof EntityPlayer)
 			{
 				if (ConfigHandler.useWhiteList)
 				{
 					ArrayList<String> whiteListedMobs = new ArrayList<String>();
 					for (String string : ConfigHandler.whiteList)
 						whiteListedMobs.add(string);
-					if (!(whiteListedMobs.contains(event.entityLiving.toString()))) return;
+					if (!(whiteListedMobs.contains(event.getEntityLiving().toString())))
+						return;
 				}
 				if (ConfigHandler.useBlackList)
 				{
 					ArrayList<String> blackListedMobs = new ArrayList<String>();
 					for (String string : ConfigHandler.blackList)
 						blackListedMobs.add(string);
-					if (blackListedMobs.contains(event.entityLiving.toString())) return;
+					if (blackListedMobs.contains(event.getEntityLiving().toString()))
+						return;
 				}
-				EntityPlayer player = (EntityPlayer) event.source.getEntity();
-				ItemStack weapon = player.getCurrentEquippedItem();
-				if (weapon != null && EnchantmentHelper.getEnchantmentLevel(ModArmory.shardLooter.effectId, weapon) == 1)
+				EntityPlayer player = (EntityPlayer) event.getSource().getEntity();
+				ItemStack weapon = player.getHeldItem(player.getActiveHand());
+				if (weapon != null && EnchantmentHelper.getEnchantmentLevel(ModArmory.shardLooter, weapon) == 1)
 				{
 					int amuletLevel = 0;
-					ItemStack amulet = PlayerHandler.getPlayerBaubles(player).getStackInSlot(0);
+					ItemStack amulet = BaublesApi.getBaubles(player).getStackInSlot(0);
 					if (amulet != null && amulet.getItem() instanceof ItemAmulet)
 					{
 						amuletLevel = Upgrade.getUpgradeLevel(amulet, "AmuletLooting");
@@ -147,10 +148,11 @@ public class EssenceEventHandler
 					if (rand.nextInt(30) < (5 * (1 + amuletLevel)))
 					{
 						int amount;
-						if (event.lootingLevel == 0) amount = 1;
-						else amount = 1 + rand.nextInt(Math.max(0, event.lootingLevel));
+						if (event.getLootingLevel() == 0)
+							amount = 1;
+						else amount = 1 + rand.nextInt(Math.max(0, event.getLootingLevel()));
 						amount *= (1 + amuletLevel);
-						event.drops.add(new EntityItem(event.entity.worldObj, event.entity.posX, event.entity.posY, event.entity.posZ, new ItemStack(ModItems.infusedShard, amount)));
+						event.getDrops().add(new EntityItem(event.getEntity().worldObj, event.getEntity().posX, event.getEntity().posY, event.getEntity().posZ, new ItemStack(ModItems.infusedShard, amount)));
 					}
 				}
 			}
@@ -160,30 +162,37 @@ public class EssenceEventHandler
 	@SubscribeEvent
 	public void onPlayerHit(LivingHurtEvent event)
 	{
-		if (event.entityLiving instanceof EntityPlayer)
+		if (event.getEntityLiving() instanceof EntityPlayer)
 		{
-			EntityPlayer player = (EntityPlayer) event.entityLiving;
-			DamageSource source = event.source;
+			EntityPlayer player = (EntityPlayer) event.getEntityLiving();
+			DamageSource source = event.getSource();
 			int protValue = 0;
 			int resValue = 0;
 			int poisonThorns = 0;
 			int poisonCount = 0;
 			int blindThorns = 0;
 			int blindCount = 0;
-			for (int i = 0; i < 4; i++)
+			for (EntityEquipmentSlot slot : EntityEquipmentSlot.values())
 			{
-				ItemStack armor = player.getEquipmentInSlot(i + 1);
+				if (slot.getSlotType() == EntityEquipmentSlot.Type.HAND)
+					continue;
+				ItemStack armor = player.getItemStackFromSlot(slot);
 				if (armor != null && armor.getItem() instanceof ItemModArmor)
 				{
 					NBTTagCompound compound = armor.getTagCompound();
 					compound.setInteger("Absorption Delay", ConfigHandler.absorptionDelay);
 					armor.setTagCompound(compound);
 
-					if (source.isFireDamage()) event.ammount -= Upgrade.getUpgradeLevel(armor, UpgradeRegistry.ArmorFireProtection);
-					if (source.isMagicDamage()) event.ammount -= Upgrade.getUpgradeLevel(armor, UpgradeRegistry.ArmorMagicProtection);
-					if (source.isExplosion()) event.ammount -= Upgrade.getUpgradeLevel(armor, UpgradeRegistry.ArmorBlastProtection);
-					if (source.isProjectile()) event.ammount -= Upgrade.getUpgradeLevel(armor, UpgradeRegistry.ArmorProjectileProtection);
-					if (source.damageType.equals(DamageSource.wither.damageType)) event.ammount -= Upgrade.getUpgradeLevel(armor, UpgradeRegistry.ArmorWitherProtection);
+					if (source.isFireDamage())
+						event.setAmount(event.getAmount() - Upgrade.getUpgradeLevel(armor, UpgradeRegistry.ArmorFireProtection));
+					if (source.isMagicDamage())
+						event.setAmount(event.getAmount() - Upgrade.getUpgradeLevel(armor, UpgradeRegistry.ArmorMagicProtection));
+					if (source.isExplosion())
+						event.setAmount(event.getAmount() - Upgrade.getUpgradeLevel(armor, UpgradeRegistry.ArmorBlastProtection));
+					if (source.isProjectile())
+						event.setAmount(event.getAmount() - Upgrade.getUpgradeLevel(armor, UpgradeRegistry.ArmorProjectileProtection));
+					if (source.damageType.equals(DamageSource.wither.damageType))
+						event.setAmount(event.getAmount() - Upgrade.getUpgradeLevel(armor, UpgradeRegistry.ArmorWitherProtection));
 
 					protValue += Upgrade.getUpgradeLevel(armor, "ArmorPhysicalProtection");
 					resValue += Upgrade.getUpgradeLevel(armor, "ArmorResistance");
@@ -205,10 +214,10 @@ public class EssenceEventHandler
 
 			double protReduction = protValue * ConfigHandler.maxProtectionValue / 16;
 			double resReduction = resValue * 0.025;
-			event.ammount *= (1 - protReduction) * (1 - resReduction);
-			if (event.source.getEntity() != null && event.source.getEntity() instanceof EntityLivingBase)
+			event.setAmount((float) (event.getAmount() * (1 - protReduction) * (1 - resReduction)));
+			if (event.getSource().getEntity() != null && event.getSource().getEntity() instanceof EntityLivingBase)
 			{
-				EntityLivingBase enemy = (EntityLivingBase) event.source.getEntity();
+				EntityLivingBase enemy = (EntityLivingBase) event.getSource().getEntity();
 				if (rand.nextInt(100) < (ConfigHandler.blindThornsChance * blindCount))
 				{
 					enemy.addPotionEffect(new PotionEffect(Potion.blindness.id, blindThorns * ConfigHandler.blindThornsDuration, 0));
@@ -225,27 +234,28 @@ public class EssenceEventHandler
 	@SideOnly(Side.CLIENT)
 	public void infusedTooltip(ItemTooltipEvent event)
 	{
-		if (event.itemStack == null || event.entityPlayer == null || event.entityPlayer.worldObj == null) return;
-		if (event.itemStack.getItem() instanceof ItemModSword)
+		if (event.getItemStack() == null || event.getEntityPlayer() == null || event.getEntityPlayer().worldObj == null)
+			return;
+		if (event.getItemStack().getItem() instanceof ItemModSword)
 		{
-			ListIterator<String> iterator = event.toolTip.listIterator();
+			ListIterator<String> iterator = event.getToolTip().listIterator();
 			while (iterator.hasNext())
 			{
 				String next = iterator.next();
 				if (next.contains("Attack Damage"))
 				{
 					iterator.previous();
-					float weaponDamage = event.itemStack.getTagCompound().getFloat("weaponDamage");
-					float fireDamage = Upgrade.getUpgradeLevel(event.itemStack, UpgradeRegistry.WeaponFireDamage);
-					float witherDamage = Upgrade.getUpgradeLevel(event.itemStack, UpgradeRegistry.WeaponWitherDamage);
-					float magicDamage = Upgrade.getUpgradeLevel(event.itemStack, UpgradeRegistry.WeaponMagicDamage);
-					float chaosDamage = Upgrade.getUpgradeLevel(event.itemStack, UpgradeRegistry.WeaponChaosDamage);
-					float divineDamage = Upgrade.getUpgradeLevel(event.itemStack, UpgradeRegistry.WeaponDivineDamage);
-					float taintDamage = Upgrade.getUpgradeLevel(event.itemStack, UpgradeRegistry.WeaponTaintDamage);
-					float frostDamage = Upgrade.getUpgradeLevel(event.itemStack, UpgradeRegistry.WeaponFrostDamage);
-					float holyDamage = Upgrade.getUpgradeLevel(event.itemStack, UpgradeRegistry.WeaponHolyDamage);
-					float lightningDamage = Upgrade.getUpgradeLevel(event.itemStack, UpgradeRegistry.WeaponLightningDamage);
-					float windDamage = Upgrade.getUpgradeLevel(event.itemStack, UpgradeRegistry.WeaponWindDamage);
+					float weaponDamage = event.getItemStack().getTagCompound().getFloat("weaponDamage");
+					float fireDamage = Upgrade.getUpgradeLevel(event.getItemStack(), UpgradeRegistry.WeaponFireDamage);
+					float witherDamage = Upgrade.getUpgradeLevel(event.getItemStack(), UpgradeRegistry.WeaponWitherDamage);
+					float magicDamage = Upgrade.getUpgradeLevel(event.getItemStack(), UpgradeRegistry.WeaponMagicDamage);
+					float chaosDamage = Upgrade.getUpgradeLevel(event.getItemStack(), UpgradeRegistry.WeaponChaosDamage);
+					float divineDamage = Upgrade.getUpgradeLevel(event.getItemStack(), UpgradeRegistry.WeaponDivineDamage);
+					float taintDamage = Upgrade.getUpgradeLevel(event.getItemStack(), UpgradeRegistry.WeaponTaintDamage);
+					float frostDamage = Upgrade.getUpgradeLevel(event.getItemStack(), UpgradeRegistry.WeaponFrostDamage);
+					float holyDamage = Upgrade.getUpgradeLevel(event.getItemStack(), UpgradeRegistry.WeaponHolyDamage);
+					float lightningDamage = Upgrade.getUpgradeLevel(event.getItemStack(), UpgradeRegistry.WeaponLightningDamage);
+					float windDamage = Upgrade.getUpgradeLevel(event.getItemStack(), UpgradeRegistry.WeaponWindDamage);
 
 					fireDamage *= ConfigHandler.isFireDamagePercent ? weaponDamage * ConfigHandler.fireDamageMulti : ConfigHandler.fireDamageAmount;
 					witherDamage *= ConfigHandler.isWitherDamagePercent ? weaponDamage * ConfigHandler.witherDamageMulti : ConfigHandler.witherDamageAmount;
@@ -271,53 +281,63 @@ public class EssenceEventHandler
 
 					if (fireText != 0)
 					{
-						if (fireText == (int) fireText) iterator.add(EnumChatFormatting.BLUE + "+" + ((int) fireText) + " Fire Damage");
-						else iterator.add(EnumChatFormatting.BLUE + "+" + fireText + " Fire Damage");
+						if (fireText == (int) fireText)
+							iterator.add(TextFormatting.BLUE + "+" + ((int) fireText) + " Fire Damage");
+						else iterator.add(TextFormatting.BLUE + "+" + fireText + " Fire Damage");
 					}
 					if (witherText != 0)
 					{
-						if (witherText == (int) witherText) iterator.add(EnumChatFormatting.BLUE + "+" + ((int) witherText) + " Wither Damage");
-						else iterator.add(EnumChatFormatting.BLUE + "+" + witherText + " Wither Damage");
+						if (witherText == (int) witherText)
+							iterator.add(TextFormatting.BLUE + "+" + ((int) witherText) + " Wither Damage");
+						else iterator.add(TextFormatting.BLUE + "+" + witherText + " Wither Damage");
 					}
 					if (magicText != 0)
 					{
-						if (magicText == (int) magicText) iterator.add(EnumChatFormatting.BLUE + "+" + ((int) magicText) + " Magic Damage");
-						else iterator.add(EnumChatFormatting.BLUE + "+" + magicText + " Magic Damage");
+						if (magicText == (int) magicText)
+							iterator.add(TextFormatting.BLUE + "+" + ((int) magicText) + " Magic Damage");
+						else iterator.add(TextFormatting.BLUE + "+" + magicText + " Magic Damage");
 					}
 					if (chaosText != 0)
 					{
-						if (chaosText == (int) chaosText) iterator.add(EnumChatFormatting.BLUE + "+" + ((int) chaosText) + " Chaos Damage");
-						else iterator.add(EnumChatFormatting.BLUE + "+" + chaosText + " Chaos Damage");
+						if (chaosText == (int) chaosText)
+							iterator.add(TextFormatting.BLUE + "+" + ((int) chaosText) + " Chaos Damage");
+						else iterator.add(TextFormatting.BLUE + "+" + chaosText + " Chaos Damage");
 					}
 					if (divineText != 0)
 					{
-						if (divineText == (int) divineText) iterator.add(EnumChatFormatting.BLUE + "+" + ((int) divineText) + " Divine Damage");
-						else iterator.add(EnumChatFormatting.BLUE + "+" + divineText + " Divine Damage");
+						if (divineText == (int) divineText)
+							iterator.add(TextFormatting.BLUE + "+" + ((int) divineText) + " Divine Damage");
+						else iterator.add(TextFormatting.BLUE + "+" + divineText + " Divine Damage");
 					}
 					if (taintText != 0)
 					{
-						if (taintText == (int) taintText) iterator.add(EnumChatFormatting.BLUE + "+" + ((int) taintText) + " Flux Damage");
-						else iterator.add(EnumChatFormatting.BLUE + "+" + taintText + " Flux Damage");
+						if (taintText == (int) taintText)
+							iterator.add(TextFormatting.BLUE + "+" + ((int) taintText) + " Flux Damage");
+						else iterator.add(TextFormatting.BLUE + "+" + taintText + " Flux Damage");
 					}
 					if (frostText != 0)
 					{
-						if (frostText == (int) frostText) iterator.add(EnumChatFormatting.BLUE + "+" + ((int) frostText) + " Frost Damage");
-						else iterator.add(EnumChatFormatting.BLUE + "+" + frostText + " Frost Damage");
+						if (frostText == (int) frostText)
+							iterator.add(TextFormatting.BLUE + "+" + ((int) frostText) + " Frost Damage");
+						else iterator.add(TextFormatting.BLUE + "+" + frostText + " Frost Damage");
 					}
 					if (holyText != 0)
 					{
-						if (holyText == (int) holyText) iterator.add(EnumChatFormatting.BLUE + "+" + ((int) holyText) + " Holy Damage");
-						else iterator.add(EnumChatFormatting.BLUE + "+" + holyText + " Holy Damage");
+						if (holyText == (int) holyText)
+							iterator.add(TextFormatting.BLUE + "+" + ((int) holyText) + " Holy Damage");
+						else iterator.add(TextFormatting.BLUE + "+" + holyText + " Holy Damage");
 					}
 					if (lightningText != 0)
 					{
-						if (lightningText == (int) lightningText) iterator.add(EnumChatFormatting.BLUE + "+" + ((int) lightningText) + " Lightning Damage");
-						else iterator.add(EnumChatFormatting.BLUE + "+" + lightningText + " Lightning Damage");
+						if (lightningText == (int) lightningText)
+							iterator.add(TextFormatting.BLUE + "+" + ((int) lightningText) + " Lightning Damage");
+						else iterator.add(TextFormatting.BLUE + "+" + lightningText + " Lightning Damage");
 					}
 					if (windText != 0)
 					{
-						if (windText == (int) windText) iterator.add(EnumChatFormatting.BLUE + "+" + ((int) windText) + " Wind Damage");
-						else iterator.add(EnumChatFormatting.BLUE + "+" + windText + " Wind Damage");
+						if (windText == (int) windText)
+							iterator.add(TextFormatting.BLUE + "+" + ((int) windText) + " Wind Damage");
+						else iterator.add(TextFormatting.BLUE + "+" + windText + " Wind Damage");
 					}
 					break;
 				}
@@ -328,14 +348,16 @@ public class EssenceEventHandler
 	@SubscribeEvent
 	public void onShardPickup(EntityItemPickupEvent event)
 	{
-		ItemStack item = event.item.getEntityItem();
+		ItemStack item = event.getItem().getEntityItem();
 		ArrayList<ItemStack> shardContainers = new ArrayList<ItemStack>();
-		if (event.entityPlayer.inventory.hasItem(ModItems.shardContainer))
+		if (event.getEntityPlayer().inventory.hasItemStack(new ItemStack(ModItems.shardContainer)))
 		{
-			for (ItemStack stack : event.entityPlayer.inventory.mainInventory)
+			for (ItemStack stack : event.getEntityPlayer().inventory.mainInventory)
 			{
-				if (stack == null || stack.stackSize == 0) continue;
-				if (stack.getItem().getUnlocalizedName().equals(ModItems.shardContainer.getUnlocalizedName())) shardContainers.add(stack);
+				if (stack == null || stack.stackSize == 0)
+					continue;
+				if (stack.getItem().getUnlocalizedName().equals(ModItems.shardContainer.getUnlocalizedName()))
+					shardContainers.add(stack);
 			}
 		}
 		if (item.isItemEqual(new ItemStack(ModItems.infusedShard)))
@@ -343,7 +365,8 @@ public class EssenceEventHandler
 			while (item.stackSize > 0 && shardContainers.size() > 0)
 			{
 				item.stackSize = ItemShardContainer.addShards(shardContainers.get(0), item.stackSize);
-				if (item.stackSize > 0) shardContainers.remove(0);
+				if (item.stackSize > 0)
+					shardContainers.remove(0);
 			}
 		}
 		if (item.isItemEqual(new ItemStack(ModBlocks.shardBlock)))
@@ -352,10 +375,11 @@ public class EssenceEventHandler
 			while (shards > 0 && shardContainers.size() > 0)
 			{
 				shards = ItemShardContainer.addShards(shardContainers.get(0), shards);
-				if (shards > 0) shardContainers.remove(0);
+				if (shards > 0)
+					shardContainers.remove(0);
 			}
 			item.stackSize = shards / 9;
-			event.item.worldObj.spawnEntityInWorld(new EntityItem(event.item.worldObj, event.item.posX, event.item.posY, event.item.posZ, new ItemStack(ModItems.infusedShard, shards % 9)));
+			event.getItem().worldObj.spawnEntityInWorld(new EntityItem(event.getItem().worldObj, event.getItem().posX, event.getItem().posY, event.getItem().posZ, new ItemStack(ModItems.infusedShard, shards % 9)));
 		}
 	}
 
@@ -365,13 +389,7 @@ public class EssenceEventHandler
 		for (String str : Reference.SPRITES)
 		{
 			ResourceLocation sprite = new ResourceLocation(Reference.MODID + ":" + str);
-			event.map.registerSprite(sprite);
+			event.getMap().registerSprite(sprite);
 		}
 	}
-
-	// @SubscribeEvent
-	// public void spawnOPZombie()
-	// {
-	//
-	// }
 }

@@ -2,16 +2,14 @@ package essenceMod.enchantment;
 
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnumEnchantmentType;
-import net.minecraft.util.ResourceLocation;
-import essenceMod.utility.Reference;
+import net.minecraft.inventory.EntityEquipmentSlot;
 
 public class EnchantmentShard extends Enchantment
 {
 	public EnchantmentShard(int id, int rarity)
 	{
-		super(id, new ResourceLocation(Reference.MODID + ":shardLoot"), rarity, EnumEnchantmentType.WEAPON);
+		super(Rarity.COMMON, EnumEnchantmentType.WEAPON, new EntityEquipmentSlot[]{ EntityEquipmentSlot.MAINHAND, EntityEquipmentSlot.OFFHAND });
 		this.setName("shardLoot");
-		this.addToBookList(this);
 	}
 	
 	public int getMinEnchantability(int level)

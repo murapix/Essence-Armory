@@ -5,13 +5,14 @@ import java.util.List;
 import mezz.jei.api.IGuiHelper;
 import mezz.jei.api.gui.IDrawable;
 import mezz.jei.api.gui.IRecipeLayout;
+import mezz.jei.api.ingredients.IIngredients;
 import mezz.jei.api.recipe.IRecipeCategory;
 import mezz.jei.api.recipe.IRecipeWrapper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.StatCollector;
+import net.minecraft.util.text.translation.I18n;
 import essenceMod.utility.Reference;
 
 public class InfuserItemRecipeCategory implements IRecipeCategory
@@ -23,7 +24,7 @@ public class InfuserItemRecipeCategory implements IRecipeCategory
 	public InfuserItemRecipeCategory(IGuiHelper guiHelper)
 	{
 		background = guiHelper.createBlankDrawable(150, 110);
-		localizedName = StatCollector.translateToLocal("EssenceArmory.nei.infuser.item");
+		localizedName = I18n.translateToLocal("EssenceArmory.nei.infuser.item");
 		overlay = guiHelper.createDrawable(new ResourceLocation(Reference.MODID + ":textures/gui/infuserOverlay.png"), 0, 0, 156, 122);
 	}
 	
@@ -84,5 +85,17 @@ public class InfuserItemRecipeCategory implements IRecipeCategory
 		}
 		recipeLayout.getItemStacks().init(i, false, 115, 52);
 		recipeLayout.getItemStacks().set(i, wrapper.getOutputs().get(0));
+	}
+
+	@Override
+	public IDrawable getIcon()
+	{
+		return null;
+	}
+
+	@Override
+	public void setRecipe(IRecipeLayout recipeLayout, IRecipeWrapper recipeWrapper, IIngredients ingredients)
+	{
+		
 	}
 }

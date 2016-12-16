@@ -1,11 +1,9 @@
 package essenceMod.registry;
 
 import net.minecraft.item.Item;
-import net.minecraft.potion.Potion;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import essenceMod.items.ItemMod;
-import essenceMod.items.ItemModFood;
 import essenceMod.items.ItemShardContainer;
 import essenceMod.utility.RegisterHelper;
 
@@ -23,10 +21,6 @@ public class ModItems
 	public static Item infusedIngot = new ItemMod().setUnlocalizedName("ingotInfused");
 	public static Item infusedRod = new ItemMod().setUnlocalizedName("stickInfused");
 	public static Item infusedString = new ItemMod().setUnlocalizedName("stringInfused");
-	
-	public static Item infusedApple = new ItemModFood(0, false).addPotionEffect(Potion.damageBoost.id, 90, 1).addPotionEffect(Potion.resistance.id, 90, 2).addPotionEffect(Potion.absorption.id, 90, 4).setUnlocalizedName("appleInfused");
-	public static Item crystalApple = new ItemModFood(0, false).addPotionEffect(Potion.damageBoost.id, 90, 2).addPotionEffect(Potion.resistance.id, 90, 3).addPotionEffect(Potion.absorption.id, 90, 5).setUnlocalizedName("appleCrystallized");
-	public static Item platedApple = new ItemModFood(0, false).addPotionEffect(Potion.damageBoost.id, 90, 3).addPotionEffect(Potion.resistance.id, 90, 4).addPotionEffect(Potion.absorption.id, 90, 6).setUnlocalizedName("applePlated");
 	
 	public static Item infusedWand = new ItemMod().setUnlocalizedName("wandInfused");
 	
@@ -46,10 +40,6 @@ public class ModItems
 		RegisterHelper.registerItem(infusedIngot);
 		RegisterHelper.registerItem(infusedRod);
 		RegisterHelper.registerItem(infusedString);
-		
-		RegisterHelper.registerItem(infusedApple);
-		RegisterHelper.registerItem(crystalApple);
-		RegisterHelper.registerItem(platedApple);
 		
 		RegisterHelper.registerItem(infusedWand);
 		
@@ -71,10 +61,6 @@ public class ModItems
 		((ItemMod) infusedIngot).initModel();
 		((ItemMod) infusedRod).initModel();
 		((ItemMod) infusedString).initModel();
-		
-		((ItemModFood) infusedApple).initModel();
-		((ItemModFood) crystalApple).initModel();
-		((ItemModFood) platedApple).initModel();
 		
 		((ItemMod) infusedWand).initModel();
 		

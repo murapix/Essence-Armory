@@ -13,9 +13,6 @@ import essenceMod.utility.Reference;
 @Mod(modid = Reference.MODID, name = Reference.NAME, version = Reference.VERSION,
 dependencies = "required-after:Forge@[1.8.9-11.15.1.1761,);" +
 		"required-after:Baubles;" +
-		"after:TConstruct;" +
-		"after:Thaumcraft;" +
-		"after:Botania;" + 
 		"after:JEI")
 public class EssenceMod
 {
@@ -41,7 +38,6 @@ public class EssenceMod
 	public void postInit(FMLPostInitializationEvent event)
 	{
 		proxy.postInit(event);
-//		System.out.println(UUID.randomUUID());
 	}
 	
 	@Mod.EventHandler

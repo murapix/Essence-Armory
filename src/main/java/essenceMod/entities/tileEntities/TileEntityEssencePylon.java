@@ -3,7 +3,6 @@ package essenceMod.entities.tileEntities;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ITickable;
-import essenceMod.utility.Reference;
 
 public class TileEntityEssencePylon extends TileEntityEssenceInfuser implements IInventory, ITickable
 {	
@@ -16,7 +15,6 @@ public class TileEntityEssencePylon extends TileEntityEssenceInfuser implements 
 	@Override
 	public void update()
 	{
-		worldObj.markBlockForUpdate(pos);
 		markDirty();
 	}
 
@@ -26,16 +24,9 @@ public class TileEntityEssencePylon extends TileEntityEssenceInfuser implements 
 		return true;
 	}
 	
-	@Override
-	public String getName()
-	{
-		return Reference.MODID + ".TileEntityEssencePylon";
-	}
-	
 	public void infuse()
 	{
 		slots[0] = null;
-		worldObj.markBlockForUpdate(pos);
 		markDirty();
 	}
 }

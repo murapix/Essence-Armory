@@ -2,13 +2,14 @@ package essenceMod.items;
 
 import java.util.List;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.resources.model.ModelResourceLocation;
+import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemSword;
@@ -18,7 +19,6 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
-import essenceMod.handlers.ConfigHandler;
 import essenceMod.registry.ModArmory;
 import essenceMod.registry.crafting.upgrades.Upgrade;
 import essenceMod.registry.crafting.upgrades.UpgradeRegistry;
@@ -38,17 +38,17 @@ public class ItemModLootSword extends ItemSword
 	}
 	
 	@Override
-	public void getSubItems(Item item, CreativeTabs tab, List list)
+	public void getSubItems(Item item, CreativeTabs tab, List<ItemStack> list)
 	{
 		for (int i = 0; i < 5; i++)
 			list.add(new ItemStack(item, 1, i));
 	}
 	
 	@Override
-	public Multimap getAttributeModifiers(ItemStack item)
+	public Multimap<String, AttributeModifier> getAttributeModifiers(EntityEquipmentSlot slot, ItemStack item)
 	{
-		Multimap multimap = HashMultimap.create();
-		multimap.put(SharedMonsterAttributes.attackDamage.getAttributeUnlocalizedName(), new AttributeModifier(itemModifierUUID, "Weapon modifier", ToolMaterial.EMERALD.getDamageVsEntity() + 4.0F, 0));
+		Multimap<String, AttributeModifier> multimap = HashMultimap.create();
+		multimap.put(SharedMonsterAttributes.ATTACK_DAMAGE.getAttributeUnlocalizedName(), new AttributeModifier(ATTACK_DAMAGE_MODIFIER, "Weapon modifier", ToolMaterial.DIAMOND.getDamageVsEntity() + 4.0F, 0));
 		return multimap;
 	}
 	
@@ -58,7 +58,7 @@ public class ItemModLootSword extends ItemSword
 		NBTTagCompound compound = item.hasTagCompound() ? item.getTagCompound() : new NBTTagCompound();
 		compound.setInteger("Level", 0);
 		item.setTagCompound(compound);
-		if (EnchantmentHelper.getEnchantmentLevel(ConfigHandler.shardEnchantID, item) == 0) item.addEnchantment(ModArmory.shardLooter, 1);
+		if (EnchantmentHelper.getEnchantmentLevel(ModArmory.shardLooter, item) == 0) item.addEnchantment(ModArmory.shardLooter, 1);
 	}
 	
 	@Override
@@ -75,7 +75,7 @@ public class ItemModLootSword extends ItemSword
 	}
 	
 	@Override
-	public void addInformation(ItemStack item, EntityPlayer entityPlayer, List list, boolean bool)
+	public void addInformation(ItemStack item, EntityPlayer entityPlayer, List<String> list, boolean bool)
 	{
 		list.add("Increases shard drop chance to " + ((Upgrade.getUpgradeLevel(item, UpgradeRegistry.ShardSwordLooting) + 1) * 100 / 6) + "%");
 		list.add("Multiplies shard drop amount by " + (Upgrade.getUpgradeLevel(item, UpgradeRegistry.ShardSwordLooting) + 1)); 

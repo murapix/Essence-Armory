@@ -4,8 +4,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.resources.model.ModelResourceLocation;
+import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.creativetab.CreativeTabs;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.attributes.AttributeModifier;
@@ -13,14 +14,15 @@ import net.minecraft.entity.ai.attributes.IAttributeInstance;
 import net.minecraft.entity.monster.EntityMob;
 import net.minecraft.entity.passive.EntityAmbientCreature;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.DamageSource;
-import net.minecraft.util.EnumChatFormatting;
-import net.minecraft.util.MathHelper;
-import net.minecraft.util.StatCollector;
+import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.text.TextFormatting;
+import net.minecraft.util.text.translation.I18n;
 import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
@@ -31,12 +33,13 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import baubles.api.BaubleType;
-import baubles.common.lib.PlayerHandler;
+import baubles.api.BaublesApi;
 import essenceMod.registry.crafting.InfuserRecipes;
 import essenceMod.registry.crafting.upgrades.Upgrade;
 import essenceMod.registry.crafting.upgrades.UpgradeRegistry;
 import essenceMod.utility.UtilityHelper;
 
+@SuppressWarnings("deprecation")
 public class ItemBelt extends ItemBauble
 {
 	int level;
@@ -61,7 +64,7 @@ public class ItemBelt extends ItemBauble
 	}
 
 	@Override
-	public void getSubItems(Item item, CreativeTabs tab, List list)
+	public void getSubItems(Item item, CreativeTabs tab, List<ItemStack> list)
 	{
 		for (int i = 0; i < numSubTypes; i++)
 			list.add(new ItemStack(item, 1, i));
@@ -119,9 +122,9 @@ public class ItemBelt extends ItemBauble
 		super.onUnequipped(item, player);
 		if (player instanceof EntityPlayer)
 		{
-			IAttributeInstance attribute = player.getAttributeMap().getAttributeInstance(SharedMonsterAttributes.maxHealth);
+			IAttributeInstance attribute = player.getAttributeMap().getAttributeInstance(SharedMonsterAttributes.MAX_HEALTH);
 			if (attribute != null) attribute.removeModifier(health);
-			attribute = player.getAttributeMap().getAttributeInstance(SharedMonsterAttributes.knockbackResistance);
+			attribute = player.getAttributeMap().getAttributeInstance(SharedMonsterAttributes.KNOCKBACK_RESISTANCE);
 			if (attribute != null) attribute.removeModifier(knockbackRes);
 		}
 	}
@@ -129,13 +132,13 @@ public class ItemBelt extends ItemBauble
 	@SubscribeEvent
 	public void updatePlayerHealth(LivingUpdateEvent event)
 	{
-		if (event.entityLiving instanceof EntityPlayer)
+		if (event.getEntityLiving() instanceof EntityPlayer)
 		{
-			EntityPlayer player = (EntityPlayer) event.entityLiving;
-			ItemStack belt = PlayerHandler.getPlayerBaubles(player).getStackInSlot(3);
+			EntityPlayer player = (EntityPlayer) event.getEntityLiving();
+			ItemStack belt = BaublesApi.getBaubles(player).getStackInSlot(3);
 			if (belt != null && belt.getItem() instanceof ItemBelt)
 			{
-				IAttributeInstance attribute = player.getAttributeMap().getAttributeInstance(SharedMonsterAttributes.maxHealth);
+				IAttributeInstance attribute = player.getAttributeMap().getAttributeInstance(SharedMonsterAttributes.MAX_HEALTH);
 				if (attribute != null)
 				{
 					attribute.removeModifier(health);
@@ -149,17 +152,17 @@ public class ItemBelt extends ItemBauble
 	@SubscribeEvent
 	public void onPlayerAttack(AttackEntityEvent event)
 	{
-		EntityPlayer attacker = event.entityPlayer;
-		ItemStack belt = PlayerHandler.getPlayerBaubles(attacker).getStackInSlot(3);
+		EntityPlayer attacker = event.getEntityPlayer();
+		ItemStack belt = BaublesApi.getBaubles(attacker).getStackInSlot(3);
 		if (belt != null && belt.getItem() instanceof ItemBelt)
 		{
 			int level = Upgrade.getUpgradeLevel(belt, UpgradeRegistry.BeltCleave);
-			if (level != 0 && event.target instanceof EntityLivingBase)
+			if (level != 0 && event.getTarget() instanceof EntityLivingBase)
 			{
-				EntityLivingBase target = (EntityLivingBase) event.target;
+				EntityLivingBase target = (EntityLivingBase) event.getTarget();
 				World world = target.worldObj;
-				AxisAlignedBB axis = AxisAlignedBB.fromBounds(target.posX - level, target.posY - 1, target.posZ - level, target.posX + level, target.posY + 1, target.posZ + level);
-				List list;
+				AxisAlignedBB axis = new AxisAlignedBB(target.posX - level, target.posY - 1, target.posZ - level, target.posX + level, target.posY + 1, target.posZ + level);
+				List<Entity> list;
 				if (target instanceof EntityMob) list = world.getEntitiesWithinAABB(EntityMob.class, axis);
 				else if (target instanceof EntityAmbientCreature) list = world.getEntitiesWithinAABB(EntityAmbientCreature.class, axis);
 				else if (target instanceof EntityPlayer) list = world.getEntitiesWithinAABB(EntityPlayer.class, axis);
@@ -167,9 +170,9 @@ public class ItemBelt extends ItemBauble
 				list.remove(attacker);
 				list.remove(target);
 
-				ItemStack weapon = attacker.getCurrentEquippedItem();
+				ItemStack weapon = attacker.getHeldItem(attacker.getActiveHand());
 				double damage = 0;
-				Iterator iterator = weapon.getItem().getAttributeModifiers(weapon).get(SharedMonsterAttributes.attackDamage.getAttributeUnlocalizedName()).iterator();
+				Iterator<AttributeModifier> iterator = weapon.getItem().getAttributeModifiers(EntityEquipmentSlot.MAINHAND, weapon).get(SharedMonsterAttributes.ATTACK_DAMAGE.getAttributeUnlocalizedName()).iterator();
 				while (iterator.hasNext())
 					damage += ((AttributeModifier) iterator.next()).getAmount();
 				for (Object obj : list)
@@ -187,26 +190,26 @@ public class ItemBelt extends ItemBauble
 	@SubscribeEvent(priority = EventPriority.LOWEST)
 	public void onBlockBreak(BreakSpeed event)
 	{
-		EntityPlayer player = event.entityPlayer;
-		ItemStack belt = PlayerHandler.getPlayerBaubles(player).getStackInSlot(3);
+		EntityPlayer player = event.getEntityPlayer();
+		ItemStack belt = BaublesApi.getBaubles(player).getStackInSlot(3);
 		if (belt != null && belt.getItem() instanceof ItemBelt && Upgrade.getUpgradeLevel(belt, UpgradeRegistry.BaubleMiningLimiter) != 0)
 		{
-			float hardness = event.state.getBlock().getBlockHardness(player.worldObj, event.pos);
+			float hardness = event.getState().getBlockHardness(player.worldObj, event.getPos());
 			float blockHealth = hardness * 30;
-			event.newSpeed = Math.min(event.newSpeed, blockHealth - 1);
+			event.setNewSpeed(Math.min(event.getNewSpeed(), blockHealth - 1));
 		}
 	}
 
 	@SubscribeEvent
 	public void updateKnockbackRes(LivingUpdateEvent event)
 	{
-		if (event.entityLiving instanceof EntityPlayer)
+		if (event.getEntityLiving() instanceof EntityPlayer)
 		{
-			EntityPlayer player = (EntityPlayer) event.entityLiving;
-			ItemStack belt = PlayerHandler.getPlayerBaubles(player).getStackInSlot(3);
+			EntityPlayer player = (EntityPlayer) event.getEntityLiving();
+			ItemStack belt = BaublesApi.getBaubles(player).getStackInSlot(3);
 			if (belt != null && belt.getItem() instanceof ItemBelt)
 			{
-				IAttributeInstance attribute = player.getAttributeMap().getAttributeInstance(SharedMonsterAttributes.knockbackResistance);
+				IAttributeInstance attribute = player.getAttributeMap().getAttributeInstance(SharedMonsterAttributes.KNOCKBACK_RESISTANCE);
 				if (attribute != null)
 				{
 					attribute.removeModifier(knockbackRes);
@@ -218,7 +221,7 @@ public class ItemBelt extends ItemBauble
 	}
 
 	@Override
-	public void addInformation(ItemStack item, EntityPlayer entityPlayer, List list, boolean bool)
+	public void addInformation(ItemStack item, EntityPlayer entityPlayer, List<String> list, boolean bool)
 	{
 		int level = 0;
 		if (!item.hasTagCompound()) onCreated(item, entityPlayer.worldObj, entityPlayer);
@@ -231,10 +234,10 @@ public class ItemBelt extends ItemBauble
 		int miningLimit = Upgrade.getUpgradeLevel(item, UpgradeRegistry.BaubleMiningLimiter);
 		int healthBoost = Upgrade.getUpgradeLevel(item, UpgradeRegistry.BaubleHealthBoost);
 
-		if (cleave != 0) list.add(StatCollector.translateToLocal(UpgradeRegistry.BeltCleave.name) + " " + UtilityHelper.toRoman(cleave));
-		if (knockback != 0) list.add(StatCollector.translateToLocal(UpgradeRegistry.BeltKnockback.name) + " " + UtilityHelper.toRoman(knockback));
-		if (miningLimit != 0) list.add(StatCollector.translateToLocal(UpgradeRegistry.BaubleMiningLimiter.name));
-		if (healthBoost != 0) list.add(StatCollector.translateToLocal(UpgradeRegistry.BaubleHealthBoost.name) + " " + UtilityHelper.toRoman(healthBoost));
-		if (knockback != 0) list.add(EnumChatFormatting.BLUE + "+" + UtilityHelper.round(knockback * 0.2F, 1) + " Knockback Resistance");
+		if (cleave != 0) list.add(I18n.translateToLocal(UpgradeRegistry.BeltCleave.name) + " " + UtilityHelper.toRoman(cleave));
+		if (knockback != 0) list.add(I18n.translateToLocal(UpgradeRegistry.BeltKnockback.name) + " " + UtilityHelper.toRoman(knockback));
+		if (miningLimit != 0) list.add(I18n.translateToLocal(UpgradeRegistry.BaubleMiningLimiter.name));
+		if (healthBoost != 0) list.add(I18n.translateToLocal(UpgradeRegistry.BaubleHealthBoost.name) + " " + UtilityHelper.toRoman(healthBoost));
+		if (knockback != 0) list.add(TextFormatting.BLUE + "+" + UtilityHelper.round(knockback * 0.2F, 1) + " Knockback Resistance");
 	}
 }

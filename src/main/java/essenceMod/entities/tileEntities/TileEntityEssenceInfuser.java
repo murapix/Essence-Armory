@@ -9,11 +9,11 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.network.Packet;
-import net.minecraft.network.play.server.S35PacketUpdateTileEntity;
+import net.minecraft.network.play.server.SPacketUpdateTileEntity;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.ChatComponentText;
-import net.minecraft.util.IChatComponent;
 import net.minecraft.util.ITickable;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.TextComponentString;
 import net.minecraftforge.common.util.Constants.NBT;
 import essenceMod.items.ItemShardContainer;
 import essenceMod.registry.ModBlocks;
@@ -47,7 +47,6 @@ public class TileEntityEssenceInfuser extends TileEntity implements IInventory, 
 		checkPylons();
 		grabPylons();
 
-		worldObj.markBlockForUpdate(pos);
 		markDirty();
 
 		Upgrade upgrade = InfuserRecipes.checkUpgradeRecipe(slots[InfuserSlot], getPylonItems());
@@ -269,7 +268,7 @@ public class TileEntityEssenceInfuser extends TileEntity implements IInventory, 
 	}
 
 	@Override
-	public void writeToNBT(NBTTagCompound tagCompound)
+	public NBTTagCompound writeToNBT(NBTTagCompound tagCompound)
 	{
 		super.writeToNBT(tagCompound);
 
@@ -288,6 +287,7 @@ public class TileEntityEssenceInfuser extends TileEntity implements IInventory, 
 		tagCompound.setTag("Items", inventory);
 
 		tagCompound.setInteger("InfuseTime", infuseTime);
+		return tagCompound;
 	}
 
 	@Override
@@ -314,11 +314,11 @@ public class TileEntityEssenceInfuser extends TileEntity implements IInventory, 
 	{
 		NBTTagCompound syncData = new NBTTagCompound();
 		this.writeToNBT(syncData);
-		return new S35PacketUpdateTileEntity(pos, 1, syncData);
+		return new SPacketUpdateTileEntity(pos, 1, syncData);
 	}
 
 	@Override
-	public void onDataPacket(NetworkManager net, S35PacketUpdateTileEntity packet)
+	public void onDataPacket(NetworkManager net, SPacketUpdateTileEntity packet)
 	{
 		readFromNBT(packet.getNbtCompound());
 	}
@@ -342,9 +342,9 @@ public class TileEntityEssenceInfuser extends TileEntity implements IInventory, 
 	}
 
 	@Override
-	public IChatComponent getDisplayName()
+	public ITextComponent getDisplayName()
 	{
-		return new ChatComponentText("Essence Infuser");
+		return new TextComponentString("Essence Infuser");
 	}
 
 	@Override

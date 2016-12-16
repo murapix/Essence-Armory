@@ -5,20 +5,20 @@ import java.util.List;
 import java.util.UUID;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.client.resources.model.ModelResourceLocation;
+import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.entity.ai.attributes.IAttributeInstance;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.item.ItemArmor;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.potion.Potion;
 import net.minecraft.potion.PotionEffect;
-import net.minecraft.util.EnumChatFormatting;
-import net.minecraft.util.StatCollector;
+import net.minecraft.util.text.TextFormatting;
+import net.minecraft.util.text.translation.I18n;
 import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
@@ -27,11 +27,6 @@ import net.minecraftforge.fml.common.Optional.Interface;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
-import thaumcraft.api.aspects.Aspect;
-import thaumcraft.api.items.IGoggles;
-import thaumcraft.api.items.IRevealer;
-import thaumcraft.api.items.IRunicArmor;
-import thaumcraft.api.items.IVisDiscountGear;
 import essenceMod.handlers.ConfigHandler;
 import essenceMod.registry.ModArmory;
 import essenceMod.registry.crafting.upgrades.Upgrade;
@@ -40,14 +35,14 @@ import essenceMod.tabs.ModTabs;
 import essenceMod.utility.Reference;
 import essenceMod.utility.UtilityHelper;
 
-@Optional.InterfaceList(value = { @Interface(modid = "Thaumcraft", iface = "thaumcraft.api.IVisDiscountGear"), @Interface(modid = "Thaumcraft", iface = "thaumcraft.api.IGoggles"), @Interface(modid = "Thaumcraft", iface = "thaumcraft.api.IRevealer"), @Interface(modid = "Thaumcraft", iface = "thaumcraft.api.IRunicArmor")/*, @Interface(modid = "Botania", iface = "vaskii.botania.api.mana.IManaDiscountArmor")*/ })
-public class ItemModArmor extends ItemArmor implements IUpgradeable, IVisDiscountGear, IGoggles, IRevealer, IRunicArmor//, IManaDiscountArmor
+@SuppressWarnings("deprecation")
+public class ItemModArmor extends ItemArmor implements IUpgradeable
 {
 	private static AttributeModifier health = new AttributeModifier(UUID.fromString("EE15F16D-AA48-45CE-8B72-BF5A1A1D5CFD"), "EssenceArmoryArmorHealth", ConfigHandler.healthBoostCount, 0);
 
 	private int level;
 
-	public ItemModArmor(ArmorMaterial material, int ArmorType)
+	public ItemModArmor(ArmorMaterial material, EntityEquipmentSlot ArmorType)
 	{
 		super(material, 0, ArmorType);
 		setCreativeTab(ModTabs.tabEssence);
@@ -89,7 +84,7 @@ public class ItemModArmor extends ItemArmor implements IUpgradeable, IVisDiscoun
 	}
 
 	@Override
-	public String getArmorTexture(ItemStack item, Entity entity, int slot, String type)
+	public String getArmorTexture(ItemStack item, Entity entity, EntityEquipmentSlot slot, String type)
 	{
 		if (item.getItem() == ModArmory.infusedHelm || item.getItem() == ModArmory.infusedPlate || item.getItem() == ModArmory.infusedBoots)
 		{
@@ -105,17 +100,19 @@ public class ItemModArmor extends ItemArmor implements IUpgradeable, IVisDiscoun
 	@SubscribeEvent
 	public void onPlayerUpdate(LivingUpdateEvent event)
 	{
-		if (event.entityLiving instanceof EntityPlayer)
+		if (event.getEntityLiving() instanceof EntityPlayer)
 		{
-			EntityPlayer player = (EntityPlayer) event.entityLiving;
+			EntityPlayer player = (EntityPlayer) event.getEntityLiving();
 			boolean regenAbsorption = true;
 			int absorption = 0;
 			int healthBoost = 0;
 
-			for (int i = 1; i <= 4; i++)
+			for (EntityEquipmentSlot slot : EntityEquipmentSlot.values())
 			{
-				ItemStack item = player.getEquipmentInSlot(i);
+				if (slot.getSlotType() == EntityEquipmentSlot.Type.HAND) continue;
+				ItemStack item = player.getItemStackFromSlot(slot);
 				if (item == null) continue;
+				if (!item.hasTagCompound()) onCreated(item, player.worldObj, player);
 				if (item.getItem() instanceof ItemModArmor)
 				{
 					if (item.getTagCompound().getInteger("Absorption Delay") != 0) regenAbsorption = false;
@@ -138,9 +135,10 @@ public class ItemModArmor extends ItemArmor implements IUpgradeable, IVisDiscoun
 			else player.setAbsorptionAmount(maxAbsorption);
 			if (regenAbsorption)
 			{
-				for (int i = 1; i <= 4; i++)
+				for (EntityEquipmentSlot slot : EntityEquipmentSlot.values())
 				{
-					ItemStack item = player.getEquipmentInSlot(i);
+					if (slot.getSlotType() == EntityEquipmentSlot.Type.HAND) continue;
+					ItemStack item = player.getItemStackFromSlot(slot);
 					if (item == null) continue;
 					if (item.getItem() instanceof ItemModArmor)
 					{
@@ -151,7 +149,7 @@ public class ItemModArmor extends ItemArmor implements IUpgradeable, IVisDiscoun
 				}
 			}
 
-			IAttributeInstance attribute = player.getAttributeMap().getAttributeInstance(SharedMonsterAttributes.maxHealth);
+			IAttributeInstance attribute = player.getAttributeMap().getAttributeInstance(SharedMonsterAttributes.MAX_HEALTH);
 			if (attribute != null)
 			{
 				attribute.removeModifier(health);
@@ -161,31 +159,31 @@ public class ItemModArmor extends ItemArmor implements IUpgradeable, IVisDiscoun
 	}
 
 	@Override
-	public void addInformation(ItemStack item, EntityPlayer player, List list, boolean bool)
+	public void addInformation(ItemStack item, EntityPlayer player, List<String> list, boolean bool)
 	{
 		if (!item.hasTagCompound()) onCreated(item, player.worldObj, player);
 
 		int visDiscount = Upgrade.getUpgradeLevel(item, UpgradeRegistry.ArmorVisDiscount);
-		if (visDiscount != 0) list.add(EnumChatFormatting.DARK_PURPLE + StatCollector.translateToLocal("tc.visdiscount") + ": " + visDiscount + "%");
+		if (visDiscount != 0) list.add(TextFormatting.DARK_PURPLE + I18n.translateToLocal("tc.visdiscount") + ": " + visDiscount + "%");
 
 		int revealing = Upgrade.getUpgradeLevel(item, UpgradeRegistry.ArmorRevealing);
-		if (revealing != 0) list.add(EnumChatFormatting.DARK_PURPLE + StatCollector.translateToLocal(UpgradeRegistry.ArmorRevealing.name));
+		if (revealing != 0) list.add(TextFormatting.DARK_PURPLE + I18n.translateToLocal(UpgradeRegistry.ArmorRevealing.name));
 
 		int manaDiscount = Upgrade.getUpgradeLevel(item, UpgradeRegistry.ArmorManaDiscount);
-		if (manaDiscount != 0) list.add(EnumChatFormatting.AQUA + StatCollector.translateToLocal(UpgradeRegistry.ArmorManaDiscount.name) + ": " + manaDiscount + "%");
+		if (manaDiscount != 0) list.add(TextFormatting.AQUA + I18n.translateToLocal(UpgradeRegistry.ArmorManaDiscount.name) + ": " + manaDiscount + "%");
 		
-		if (Upgrade.getUpgradeLevel(item, UpgradeRegistry.ArmorStepAssist) != 0) list.add(EnumChatFormatting.BLUE + StatCollector.translateToLocal(UpgradeRegistry.ArmorStepAssist.name));
+		if (Upgrade.getUpgradeLevel(item, UpgradeRegistry.ArmorStepAssist) != 0) list.add(TextFormatting.BLUE + I18n.translateToLocal(UpgradeRegistry.ArmorStepAssist.name));
 
 		int invisible = Upgrade.getUpgradeLevel(item, UpgradeRegistry.ArmorInvisible);
-		if (invisible != 0) list.add(StatCollector.translateToLocal(UpgradeRegistry.ArmorInvisible.name));
+		if (invisible != 0) list.add(I18n.translateToLocal(UpgradeRegistry.ArmorInvisible.name));
 
 		if (GuiScreen.isShiftKeyDown()) list.addAll(addShiftInfo(item));
 		else list.addAll(addNormalInfo(item));
 	}
 
-	private List addNormalInfo(ItemStack item)
+	private List<String> addNormalInfo(ItemStack item)
 	{
-		List list = new ArrayList();
+		List<String> list = new ArrayList<>();
 
 		int level = ItemModArmor.getLevel(item);
 		int protection = Upgrade.getUpgradeLevel(item, UpgradeRegistry.ArmorPhysicalProtection);
@@ -208,27 +206,27 @@ public class ItemModArmor extends ItemArmor implements IUpgradeable, IVisDiscoun
 			list.add("Hold SHIFT for more information");
 			list.add("Level: " + UtilityHelper.toRoman(level));
 		}
-		if (protection != 0) list.add(StatCollector.translateToLocal(UpgradeRegistry.ArmorPhysicalProtection.name) + " " + UtilityHelper.toRoman(protection));
-		if (fireProtection != 0) list.add(StatCollector.translateToLocal(UpgradeRegistry.ArmorFireProtection.name) + " " + UtilityHelper.toRoman(fireProtection));
-		if (magicProtection != 0) list.add(StatCollector.translateToLocal(UpgradeRegistry.ArmorMagicProtection.name) + " " + UtilityHelper.toRoman(magicProtection));
-		if (witherProtection != 0) list.add(StatCollector.translateToLocal(UpgradeRegistry.ArmorWitherProtection.name) + " " + UtilityHelper.toRoman(witherProtection));
-		if (blastProtection != 0) list.add(StatCollector.translateToLocal(UpgradeRegistry.ArmorBlastProtection.name) + " " + UtilityHelper.toRoman(blastProtection));
-		if (projectileProtection != 0) list.add(StatCollector.translateToLocal(UpgradeRegistry.ArmorProjectileProtection.name) + " " + UtilityHelper.toRoman(projectileProtection));
-		if (chaosProtection != 0) list.add(StatCollector.translateToLocal(UpgradeRegistry.ArmorChaosProtection.name) + " " + UtilityHelper.toRoman(chaosProtection));
-		if (resistance != 0) list.add(StatCollector.translateToLocal(UpgradeRegistry.ArmorResistance.name) + " " + UtilityHelper.toRoman(resistance));
-		if (absorption != 0) list.add(StatCollector.translateToLocal(UpgradeRegistry.ArmorAbsorption.name) + " " + UtilityHelper.toRoman(absorption));
-		if (healthBoost != 0) list.add(StatCollector.translateToLocal(UpgradeRegistry.ArmorHealthBoost.name) + " " + UtilityHelper.toRoman(healthBoost));
-		if (thorns != 0) list.add(StatCollector.translateToLocal(UpgradeRegistry.ArmorPhysicalThorns.name) + " " + UtilityHelper.toRoman(thorns));
-		if (poisonThorns != 0) list.add(StatCollector.translateToLocal(UpgradeRegistry.ArmorMagicThorns.name) + " " + UtilityHelper.toRoman(poisonThorns));
-		if (blindThorns != 0) list.add(StatCollector.translateToLocal(UpgradeRegistry.ArmorBlindThorns.name) + " " + UtilityHelper.toRoman(blindThorns));
-		if (speedBoost != 0) list.add(StatCollector.translateToLocal(UpgradeRegistry.ArmorRunSpeed.name) + " " + UtilityHelper.toRoman(speedBoost));
+		if (protection != 0) list.add(I18n.translateToLocal(UpgradeRegistry.ArmorPhysicalProtection.name) + " " + UtilityHelper.toRoman(protection));
+		if (fireProtection != 0) list.add(I18n.translateToLocal(UpgradeRegistry.ArmorFireProtection.name) + " " + UtilityHelper.toRoman(fireProtection));
+		if (magicProtection != 0) list.add(I18n.translateToLocal(UpgradeRegistry.ArmorMagicProtection.name) + " " + UtilityHelper.toRoman(magicProtection));
+		if (witherProtection != 0) list.add(I18n.translateToLocal(UpgradeRegistry.ArmorWitherProtection.name) + " " + UtilityHelper.toRoman(witherProtection));
+		if (blastProtection != 0) list.add(I18n.translateToLocal(UpgradeRegistry.ArmorBlastProtection.name) + " " + UtilityHelper.toRoman(blastProtection));
+		if (projectileProtection != 0) list.add(I18n.translateToLocal(UpgradeRegistry.ArmorProjectileProtection.name) + " " + UtilityHelper.toRoman(projectileProtection));
+		if (chaosProtection != 0) list.add(I18n.translateToLocal(UpgradeRegistry.ArmorChaosProtection.name) + " " + UtilityHelper.toRoman(chaosProtection));
+		if (resistance != 0) list.add(I18n.translateToLocal(UpgradeRegistry.ArmorResistance.name) + " " + UtilityHelper.toRoman(resistance));
+		if (absorption != 0) list.add(I18n.translateToLocal(UpgradeRegistry.ArmorAbsorption.name) + " " + UtilityHelper.toRoman(absorption));
+		if (healthBoost != 0) list.add(I18n.translateToLocal(UpgradeRegistry.ArmorHealthBoost.name) + " " + UtilityHelper.toRoman(healthBoost));
+		if (thorns != 0) list.add(I18n.translateToLocal(UpgradeRegistry.ArmorPhysicalThorns.name) + " " + UtilityHelper.toRoman(thorns));
+		if (poisonThorns != 0) list.add(I18n.translateToLocal(UpgradeRegistry.ArmorMagicThorns.name) + " " + UtilityHelper.toRoman(poisonThorns));
+		if (blindThorns != 0) list.add(I18n.translateToLocal(UpgradeRegistry.ArmorBlindThorns.name) + " " + UtilityHelper.toRoman(blindThorns));
+		if (speedBoost != 0) list.add(I18n.translateToLocal(UpgradeRegistry.ArmorRunSpeed.name) + " " + UtilityHelper.toRoman(speedBoost));
 
 		return list;
 	}
 
-	private List addShiftInfo(ItemStack item)
+	private List<String> addShiftInfo(ItemStack item)
 	{
-		List list = new ArrayList();
+		List<String> list = new ArrayList<>();
 
 		int level = ItemModArmor.getLevel(item);
 		int protection = Upgrade.getUpgradeLevel(item, UpgradeRegistry.ArmorPhysicalProtection);
@@ -283,41 +281,4 @@ public class ItemModArmor extends ItemArmor implements IUpgradeable, IVisDiscoun
 	{
 		return item.getTagCompound().getInteger("Level");
 	}
-
-	@Override
-	@Optional.Method(modid = "Thaumcraft")
-	public int getVisDiscount(ItemStack item, EntityPlayer player, Aspect aspect)
-	{
-		return Upgrade.getUpgradeLevel(item, "ArmorVisDiscount");
-	}
-
-	@Override
-	@Optional.Method(modid = "Thaumcraft")
-	public boolean showNodes(ItemStack item, EntityLivingBase player)
-	{
-		if (item.getItem() instanceof ItemModArmor && ((ItemModArmor) item.getItem()).armorType == 0) return Upgrade.getUpgradeLevel(item, "ArmorRevealing") > 0;
-		return false;
-	}
-
-	@Override
-	@Optional.Method(modid = "Thaumcraft")
-	public boolean showIngamePopups(ItemStack item, EntityLivingBase player)
-	{
-		if (item.getItem() instanceof ItemModArmor && ((ItemModArmor) item.getItem()).armorType == 0) return Upgrade.getUpgradeLevel(item, "ArmorRevealing") > 0;
-		return false;
-	}
-
-	@Override
-	@Optional.Method(modid = "Thaumcraft")
-	public int getRunicCharge(ItemStack item)
-	{
-		return Upgrade.getUpgradeLevel(item, "ArmorRunicShielding");
-	}
-
-//	@Override
-//	@Optional.Method(modid = "Botania")
-//	public float getDiscount(ItemStack item, int slot, EntityPlayer player)
-//	{
-//		return Upgrade.getUpgradeLevel(item, "ArmorManaDiscount") * 0.01F;
-//	}
 }
