@@ -2,18 +2,21 @@ package essenceMod.entities.tileEntities;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.network.NetworkManager;
-import net.minecraft.network.Packet;
 import net.minecraft.network.play.server.SPacketUpdateTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ITickable;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextComponentString;
+import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants.NBT;
 import essenceMod.items.ItemShardContainer;
 import essenceMod.registry.ModBlocks;
@@ -22,6 +25,8 @@ import essenceMod.registry.crafting.InfuserRecipes;
 import essenceMod.registry.crafting.ItemRecipe;
 import essenceMod.registry.crafting.upgrades.Upgrade;
 import essenceMod.utility.Reference;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class TileEntityEssenceInfuser extends TileEntity implements IInventory, ITickable
 {
@@ -309,21 +314,6 @@ public class TileEntityEssenceInfuser extends TileEntity implements IInventory, 
 	}
 
 	@Override
-	@SuppressWarnings("rawtypes")
-	public Packet getDescriptionPacket()
-	{
-		NBTTagCompound syncData = new NBTTagCompound();
-		this.writeToNBT(syncData);
-		return new SPacketUpdateTileEntity(pos, 1, syncData);
-	}
-
-	@Override
-	public void onDataPacket(NetworkManager net, SPacketUpdateTileEntity packet)
-	{
-		readFromNBT(packet.getNbtCompound());
-	}
-
-	@Override
 	public boolean isItemValidForSlot(int slot, ItemStack item)
 	{
 		return item != null;
@@ -386,4 +376,36 @@ public class TileEntityEssenceInfuser extends TileEntity implements IInventory, 
 	{
 
 	}
+
+    @Override
+    public boolean shouldRefresh(World world, BlockPos pos, IBlockState oldState, IBlockState newState)
+    {
+        return oldState.getBlock() != newState.getBlock();
+    }
+
+    @Override
+    public final SPacketUpdateTileEntity getUpdatePacket()
+    {
+        return new SPacketUpdateTileEntity(getPos(), -999, writeToNBT(new NBTTagCompound()));
+    }
+
+    @Override
+    @SideOnly(Side.CLIENT)
+    public final void onDataPacket(NetworkManager net, SPacketUpdateTileEntity pkt)
+    {
+        super.onDataPacket(net, pkt);
+        readFromNBT(pkt.getNbtCompound());
+    }
+
+    @Override
+    public final NBTTagCompound getUpdateTag()
+    {
+        return writeToNBT(new NBTTagCompound());
+    }
+
+    @Override
+    public final void handleUpdateTag(NBTTagCompound tag)
+    {
+        readFromNBT(tag);
+    }
 }

@@ -10,6 +10,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.entity.projectile.EntityArrow;
 import net.minecraft.init.Items;
+import net.minecraft.init.MobEffects;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.play.server.SPacketChangeGameState;
@@ -153,19 +154,19 @@ public class EntityModArrow extends EntityArrow
 
 						int poison = Upgrade.getUpgradeLevel(bow, UpgradeRegistry.WeaponMagicDoT);
 						if (poison != 0)
-							entitylivingbase.addPotionEffect(new PotionEffect(Potion.poison.id, 25 * poison, poison - 1));
+							entitylivingbase.addPotionEffect(new PotionEffect(MobEffects.POISON, 25 * poison, poison - 1));
 
 						int decay = Upgrade.getUpgradeLevel(bow, UpgradeRegistry.WeaponWitherDoT);
 						if (decay != 0)
-							entitylivingbase.addPotionEffect(new PotionEffect(Potion.wither.id, 25 * decay, decay - 1));
+							entitylivingbase.addPotionEffect(new PotionEffect(MobEffects.WITHER, 25 * decay, decay - 1));
 
 						int slow = Upgrade.getUpgradeLevel(bow, UpgradeRegistry.WeaponSlow);
 						if (slow != 0)
-							entitylivingbase.addPotionEffect(new PotionEffect(Potion.moveSlowdown.id, 25 * slow, slow - 1));
+							entitylivingbase.addPotionEffect(new PotionEffect(MobEffects.SLOWNESS, 25 * slow, slow - 1));
 
 						int blind = Upgrade.getUpgradeLevel(bow, UpgradeRegistry.WeaponBlind);
 						if (blind != 0)
-							entitylivingbase.addPotionEffect(new PotionEffect(Potion.blindness.id, 25 * slow));
+							entitylivingbase.addPotionEffect(new PotionEffect(MobEffects.BLINDNESS, 25 * slow));
 					}
 
 					if (this.shootingEntity != null && entitylivingbase != this.shootingEntity && entitylivingbase instanceof EntityPlayer && this.shootingEntity instanceof EntityPlayerMP)
