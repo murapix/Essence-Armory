@@ -13,7 +13,7 @@ configurations.all {
     resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
 }
 
-version = "1.0"
+version = "1.10.2-1.0.0"
 group = "com.escapee"
 archivesBaseName = "essencearmory"
 

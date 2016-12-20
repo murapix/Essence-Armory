@@ -12,13 +12,11 @@ import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.entity.ai.attributes.IAttributeInstance;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.init.PotionTypes;
+import net.minecraft.init.MobEffects;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.potion.Potion;
 import net.minecraft.potion.PotionEffect;
-import net.minecraft.potion.PotionType;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.text.translation.I18n;
 import net.minecraft.world.World;
@@ -113,7 +111,7 @@ public class ItemRing extends ItemBauble
 
 		if (item.hasTagCompound())
 		{
-			if (Upgrade.getUpgradeLevel(item, UpgradeRegistry.RingPotionNightVision) != 0) player.addPotionEffect(new PotionEffect(Potion.getPotionById(PotionType.getID(PotionTypes.NIGHT_VISION)), 1, 1));
+			if (Upgrade.getUpgradeLevel(item, UpgradeRegistry.RingPotionNightVision) != 0) player.addPotionEffect(new PotionEffect(MobEffects.NIGHT_VISION, 1, 1));
 		}
 
 		if (player instanceof EntityPlayer)
@@ -171,9 +169,9 @@ public class ItemRing extends ItemBauble
 				cooldown = 60 / ((ItemRing) item.getItem()).getLevel(item);
 			}
 		}
-		if (Upgrade.getUpgradeLevel(item, UpgradeRegistry.RingPotionNightVision) != 0) player.addPotionEffect(new PotionEffect(Potion.getPotionById(PotionType.getID(PotionTypes.NIGHT_VISION)), 220, 0));
-		if (Upgrade.getUpgradeLevel(item, UpgradeRegistry.RingPotionWaterBreathing) != 0) player.addPotionEffect(new PotionEffect(Potion.getPotionById(PotionType.getID(PotionTypes.WATER_BREATHING)), 20, 0));
-		if (Upgrade.getUpgradeLevel(item, UpgradeRegistry.RingPotionFireResistance) != 0) player.addPotionEffect(new PotionEffect(Potion.getPotionById(PotionType.getID(PotionTypes.FIRE_RESISTANCE)), 20, 0));
+		if (Upgrade.getUpgradeLevel(item, UpgradeRegistry.RingPotionNightVision) != 0) player.addPotionEffect(new PotionEffect(MobEffects.NIGHT_VISION, 220, 0));
+		if (Upgrade.getUpgradeLevel(item, UpgradeRegistry.RingPotionWaterBreathing) != 0) player.addPotionEffect(new PotionEffect(MobEffects.WATER_BREATHING, 20, 0));
+		if (Upgrade.getUpgradeLevel(item, UpgradeRegistry.RingPotionFireResistance) != 0) player.addPotionEffect(new PotionEffect(MobEffects.FIRE_RESISTANCE, 20, 0));
 	}
 
 	public int getLevel(ItemStack item)
@@ -196,7 +194,7 @@ public class ItemRing extends ItemBauble
 		int fireResistance = Upgrade.getUpgradeLevel(item, UpgradeRegistry.RingPotionFireResistance);
 		
 		if (swiftness != 0) list.add(I18n.translateToLocal(UpgradeRegistry.RingPotionSwiftness.name + swiftness));
-		if (haste != 0) list.add(I18n.translateToLocal(UpgradeRegistry.RingPotionSwiftness.name + haste));
+		if (haste != 0) list.add(I18n.translateToLocal(UpgradeRegistry.RingPotionHaste.name + haste));
 		if (strength != 0) list.add(I18n.translateToLocal(UpgradeRegistry.RingPotionStrength.name + strength));
 		if (jumpBoost != 0) list.add(I18n.translateToLocal(UpgradeRegistry.RingPotionJumpBoost.name + jumpBoost));
 		if (regeneration != 0) list.add(I18n.translateToLocal(UpgradeRegistry.RingPotionRegeneration.name + regeneration));

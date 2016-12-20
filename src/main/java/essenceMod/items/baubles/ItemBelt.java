@@ -44,7 +44,6 @@ public class ItemBelt extends ItemBauble
 {
 	int level;
 	public static final int numSubTypes = 17;
-	// public IIcon[] icons = new IIcon[17];
 
 	private final AttributeModifier health = new AttributeModifier(UUID.fromString("BD4FE64C-9E37-4391-9D21-88F273020B0F"), "EssenceArmoryHealthBoost", 0.5D, 2);
 	private final AttributeModifier knockbackRes = new AttributeModifier(UUID.randomUUID(), "EssenceArmoryKnockbackResistance", 0.2, 0);

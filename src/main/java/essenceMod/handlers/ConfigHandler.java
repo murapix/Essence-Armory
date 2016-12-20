@@ -46,46 +46,6 @@ public class ConfigHandler
 	public static int witherDamageAmount;
 	public static float witherBowMulti;
 	
-	//CATEGORY_COMPAT variables
-	// Extra Utilities
-	public static boolean extrautilitiesIntegration;
-	public static boolean isDivineDamagePercent;
-	public static float divineDamageMulti;
-	public static int divineDamageAmount;
-	public static float divineBowMulti;
-	// Draconic Evolution
-	public static boolean draconicevolutionIntegration;
-	public static boolean isChaosDamagePercent;
-	public static float chaosDamageMulti;
-	public static int chaosDamageAmount;
-	public static float chaosBowMulti;
-	// Thaumcraft
-	public static boolean thaumcraftIntegration = true;
-	public static boolean isTaintDamagePercent = true;
-	public static float taintDamageMulti = 0.05F;
-	public static int taintDamageAmount = 1;
-	public static float taintBowMulti = 1;
-	// Ars Magica 2
-	public static boolean arsMagicaIntegration = true;
-	public static boolean isFrostDamagePercent = true;
-	public static float frostDamageMulti = 0.05F;
-	public static int frostDamageAmount = 1;
-	public static float frostBowMulti = 1;
-	public static boolean isHolyDamagePercent = true;
-	public static float holyDamageMulti = 0.05F;
-	public static int holyDamageAmount = 1;
-	public static float holyBowMulti = 1;
-	public static boolean isLightningDamagePercent = true;
-	public static float lightningDamageMulti = 0.05F;
-	public static int lightningDamageAmount = 1;
-	public static float lightningBowMulti = 1;
-	public static boolean isWindDamagePercent = true;
-	public static float windDamageMulti = 0.05F;
-	public static int windDamageAmount = 1;
-	public static float windBowMulti = 1;
-	// Botania
-	public static boolean botaniaIntegration = true;
-	
 	//CATEGORY_ARMOR variables
 	public static float thornsDamage;
 	public static int poisonThornsDuration;
@@ -98,26 +58,6 @@ public class ConfigHandler
 	public static float maxProtectionValue;
 	
 	//CATEGORY_BAUBLES variables
-	
-	
-	//CATEGORY_TINKERS variables
-	public static boolean ticoIntegration;
-	public static int ticoMaterialId;
-	public static int ticoHarvestLevel;
-	public static int ticoDurability;
-	public static int ticoMiningSpeed;
-	public static int ticoBaseDamage;
-	public static float ticoHandleMod;
-	public static int ticoReinforced;
-	public static int ticoDrawSpeed;
-	public static float ticoProjSpeed;
-	public static float ticoProjMass;
-	public static float ticoProjFrag;
-	public static int ticoBaseModCount;
-	public static int ticoPartModCount;
-	
-	//CATEGORY_TRAVELGEAR variables
-	public static boolean travellersgearIntegration;
 	
 	public static void initProps(File location)
 	{
@@ -150,17 +90,6 @@ public class ConfigHandler
 		witherDamageAmount = config.getInt("witherDamageAmount", CATEGORY_WEAPON, 1, 0, Integer.MAX_VALUE, "The amount of damage gained per level of the wither damage upgrade. Default: 1");
 		witherBowMulti = config.getFloat("witherBowMulti", CATEGORY_WEAPON, 1, 0, Float.MAX_VALUE, "The effectiveness of wither damage upgrades on the bow. Default: 1");
 		
-		extrautilitiesIntegration = config.getBoolean("extrautilitiesIntegration", CATEGORY_COMPAT, true, "If set to true, Extra Utilities compatibility will be used. Default: true");
-		isDivineDamagePercent = config.getBoolean("isDivineDamagePercent", CATEGORY_COMPAT, true, "If set to true, the divine damage upgrade adds a percentage of the total damage as divine damage. If set to false, it adds a flat amount. Default: true");
-		divineDamageMulti = config.getFloat("divineDamageMulti", CATEGORY_COMPAT, 0.05F, 0, Float.MAX_VALUE, "The percentage of the total damage added as divine damage per level of the divine damage upgrade. Default: 0.05");
-		divineDamageAmount = config.getInt("divineDamageAmount", CATEGORY_COMPAT, 1, 0, Integer.MAX_VALUE, "The amount of damage gained per level of the divine damage up" + "grade. Default: 1");
-		divineBowMulti = config.getFloat("divineBowMulti", CATEGORY_COMPAT, 1, 0, Float.MAX_VALUE, "The effectiveness of divine damage upgrades on the bow. Default: 1");
-		draconicevolutionIntegration = config.getBoolean("draconicevolutionIntegration", CATEGORY_COMPAT, true, "If set to true, Draconic Evolution compatibility will be used. Default: true");
-		isChaosDamagePercent = config.getBoolean("isChaosDamagePercent", CATEGORY_COMPAT, true, "If set to true, the chaos damage upgrade adds a percentage of the total damage as chaos damage. If set to false, it adds a flat amount. Default: true");
-		chaosDamageMulti = config.getFloat("chaosDamageMulti", CATEGORY_COMPAT, 0.05F, 0, Float.MAX_VALUE, "The percentage of the total damage added as chaos damage per level of the chaos damage upgrade. Default: 0.05");
-		chaosDamageAmount = config.getInt("chaosDamageAmount", CATEGORY_COMPAT, 1, 0, Integer.MAX_VALUE, "The amount of damage gained per level of the chaos damage upgrade. Default: 1");
-		chaosBowMulti = config.getFloat("chaosBowMulti", CATEGORY_COMPAT, 1, 0, Float.MAX_VALUE, "The effectivness of chaos damage upgrades on the bow. Default: 1");
-		
 		thornsDamage = config.getFloat("thornsDamage", CATEGORY_ARMOR, 0.25F, 0, Float.MAX_VALUE, "The amount of damage the thorns armor upgrade deals per level. Default: 0.25");
 		poisonThornsDuration = config.getInt("poisonThornsDuration", CATEGORY_ARMOR, 20, 0, Integer.MAX_VALUE, "The duration in ticks for which the poisonous armor upgrade adds per level. Remember, 20 ticks is 1 second. Default: 10");
 		blindThornsDuration = config.getInt("blindThornsDuration", CATEGORY_ARMOR, 10, 0, Integer.MAX_VALUE, "The duration in ticks for which the blinding armor upgrade adds per level. Rememeber, 20 ticks is 1 second. Default: 10");
@@ -168,24 +97,7 @@ public class ConfigHandler
 		healthBoostCount = config.getInt("healthBoostCount", CATEGORY_ARMOR, 1, 1, Integer.MAX_VALUE, "The amount of health the health boost upgrade adds per level. Remember, each heart is two health. Default: 2");
 		absorptionCount = config.getInt("absorptionCount", CATEGORY_ARMOR, 1, 1, Integer.MAX_VALUE, "The amount of temporary health the absorption upgrade adds per level. Remember, each heart is two health. Default: 2");
 		absorptionDelay = config.getInt("absorptionDelay", CATEGORY_ARMOR, 200, 0, Integer.MAX_VALUE, "The number of ticks without taking any damage required for absorption hearts to return. Remember, 20 ticks is 1 second. Default: 200");
-		maxProtectionValue = config.getFloat("maxProtectionValue", CATEGORY_ARMOR, 0.8F, 0, 1, "The percent of damage reduction gained from a full armor set with specialized protection. The protection upgrade gives 40% of this value, and the specialized protection upgrades give 60%.");
-		
-		ticoIntegration = config.getBoolean("ticoIntegration", CATEGORY_TINKERS, true, "If set to true, the Tinkers' Construct parts will be generated if possible. Default: true");
-		ticoMaterialId = config.getInt("ticoMaterialId", CATEGORY_TINKERS, 70, 1, 256, "The material id for Infused Starmetal. Must be unique from all other Tinkers' Construct materials. Default: 70");
-		ticoHarvestLevel = config.getInt("ticoHarvestLevel", CATEGORY_TINKERS, 4, 1, Integer.MAX_VALUE, "The harvest level given by Tinkers' Construct parts. Default: 4");
-		ticoDurability = config.getInt("ticoDurability", CATEGORY_TINKERS, 10000, 1, Integer.MAX_VALUE, "The durability of Tinkers' Construct parts. Default: 10000");
-		ticoMiningSpeed = config.getInt("ticoMiningSpeed", CATEGORY_TINKERS, 900, 1, Integer.MAX_VALUE, "The mining speed of Tinkers' Construct parts. Remember, a value of 100 is only a mining speed of 1. Default: 900");
-		ticoBaseDamage = config.getInt("ticoBaseDamage", CATEGORY_TINKERS, 8, 1, Integer.MAX_VALUE, "The damage dealt by Tinkers' Construct parts. Default: 8");
-		ticoHandleMod = config.getFloat("ticoHandleMod", CATEGORY_TINKERS, 1.5F, 0F, Float.MAX_VALUE, "The handle modifier given by Tinkers' Construct parts. Default: 1.5");
-		ticoReinforced = config.getInt("ticoReinforced", CATEGORY_TINKERS, 10, 0, 10, "The number of reinforced modifiers added by each Tinkers' Construct part. Default: 10");
-		ticoDrawSpeed = config.getInt("ticoDrawSpeed", CATEGORY_TINKERS, 15, 0, Integer.MAX_VALUE, "The draw speed of Tinkers' Construct parts. Note: Not a 1 to 1 ratio, possibly a 1 to 0.15 ratio. Default: 15");
-		ticoProjSpeed = config.getFloat("ticoProjSpeed", CATEGORY_TINKERS, 9.6F, 0F, Float.MAX_VALUE, "The arrow speed of Tinkers' Construct parts. Default: 9.6");
-		ticoProjMass = config.getFloat("ticoProjMass", CATEGORY_TINKERS, 5.6F, 0F, Float.MAX_VALUE, "The weight of Tinkers' Construct parts. Default: 5.6");
-		ticoProjFrag = config.getFloat("ticoProjFrag", CATEGORY_TINKERS, 0.9F, 0F, 1F, "The chance that Tinkers' Construct ammo won't break on impact. Default: 0.9");
-		ticoBaseModCount = config.getInt("ticoBaseModCount", CATEGORY_TINKERS, 1, 0, Integer.MAX_VALUE, "The number of extra modifiers given by using Infused Starmetal parts. Default: 1");
-		ticoPartModCount = config.getInt("ticoPartModCount", CATEGORY_TINKERS, 1, 0, Integer.MAX_VALUE, "The number of extra modifiers given for each Infused Starmetal part. Default: 1");
-		
-		travellersgearIntegration = config.getBoolean("travellersgearIntegration", CATEGORY_TRAVELGEAR, true, "If set to true, the Traveller's Gear versions of baubles will be used if possible. Default: true");
+		maxProtectionValue = config.getFloat("maxProtectionValue", CATEGORY_ARMOR, 0.5F, 0, 1, "The percent of damage reduction gained from a full armor set with specialized protection. The protection upgrade gives 40% of this value, and the specialized protection upgrades give 60%.");
 		
 		config.save();
 	}

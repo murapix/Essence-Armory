@@ -2,7 +2,6 @@ package essenceMod.entities.tileEntities;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
@@ -53,6 +52,7 @@ public class TileEntityEssenceInfuser extends TileEntity implements IInventory, 
 		grabPylons();
 
 		markDirty();
+		worldObj.markBlockRangeForRenderUpdate(pos, pos.add(1, 1, 1));
 
 		Upgrade upgrade = InfuserRecipes.checkUpgradeRecipe(slots[InfuserSlot], getPylonItems());
 		ItemStack output = InfuserRecipes.checkItemRecipe(slots[InfuserSlot], getPylonItems());
@@ -63,7 +63,8 @@ public class TileEntityEssenceInfuser extends TileEntity implements IInventory, 
 			{
 				for (TileEntity pylon : pylons)
 				{
-					if (((TileEntityEssencePylon) pylon).getStackInSlot(0) == null) continue;
+					if (((TileEntityEssencePylon) pylon).getStackInSlot(0) == null)
+						continue;
 					double pX = pylon.getPos().getX() + 0.5;
 					double pY = pylon.getPos().getY() + 1.5;
 					double pZ = pylon.getPos().getZ() + 0.5;
@@ -124,7 +125,8 @@ public class TileEntityEssenceInfuser extends TileEntity implements IInventory, 
 			for (int zDiff = -5; zDiff <= 5; zDiff++)
 			{
 				TileEntity entity = worldObj.getTileEntity(pos.add(xDiff, -1, zDiff));
-				if (entity != null && entity instanceof TileEntityEssencePylon) pylons.add(entity);
+				if (entity != null && entity instanceof TileEntityEssencePylon)
+					pylons.add(entity);
 			}
 		}
 		return pylons.size() >= 1;
@@ -158,7 +160,9 @@ public class TileEntityEssenceInfuser extends TileEntity implements IInventory, 
 			else
 			{
 				TileEntityEssencePylon pylon = (TileEntityEssencePylon) pylons.get(i);
-				if (pylon.getStackInSlot(0).getItem() instanceof ItemShardContainer) shardContainers.add(pylon.getStackInSlot(0));
+				ItemStack stack = pylon.getStackInSlot(0);
+				if (stack != null && stack.getItem() instanceof ItemShardContainer)
+					shardContainers.add(pylon.getStackInSlot(0));
 				else pylon.infuse();
 			}
 		}
@@ -179,7 +183,8 @@ public class TileEntityEssenceInfuser extends TileEntity implements IInventory, 
 			{
 				TileEntityEssencePylon pylon = (TileEntityEssencePylon) pylons.get(i);
 				ItemStack item = pylon.getStackInSlot(0);
-				if (item == null) continue;
+				if (item == null)
+					continue;
 				else if (item.isItemEqual(new ItemStack(ModItems.infusedShard)))
 				{
 					pylon.infuse();
@@ -197,7 +202,7 @@ public class TileEntityEssenceInfuser extends TileEntity implements IInventory, 
 				else pylon.infuse();
 			}
 		}
-		
+
 		while (numShards > 0 && shardPylons.size() > 0)
 		{
 			ItemStack container = shardPylons.remove(0).getStackInSlot(0);
@@ -211,7 +216,8 @@ public class TileEntityEssenceInfuser extends TileEntity implements IInventory, 
 		for (int i = FirstInnerSlot; i < TotalSlotCount; i++)
 		{
 			ItemStack item = getStackInSlot(i);
-			if (item != null) items.add(item);
+			if (item != null)
+				items.add(item);
 		}
 		return items;
 	}
@@ -232,7 +238,8 @@ public class TileEntityEssenceInfuser extends TileEntity implements IInventory, 
 	public ItemStack decrStackSize(int index, int count)
 	{
 		ItemStack item = getStackInSlot(index);
-		if (item == null) return null;
+		if (item == null)
+			return null;
 
 		ItemStack temp;
 		if (item.stackSize <= count)
@@ -243,8 +250,10 @@ public class TileEntityEssenceInfuser extends TileEntity implements IInventory, 
 		else
 		{
 			temp = item.splitStack(count);
-			if (temp.stackSize == 0) setInventorySlotContents(index, null);
+			if (temp.stackSize == 0)
+				setInventorySlotContents(index, null);
 		}
+		worldObj.markBlockRangeForRenderUpdate(pos, pos.add(1, 1, 1));
 		return temp;
 	}
 
@@ -252,7 +261,9 @@ public class TileEntityEssenceInfuser extends TileEntity implements IInventory, 
 	public void setInventorySlotContents(int index, ItemStack item)
 	{
 		slots[index] = item;
-		if (item != null && item.stackSize > getInventoryStackLimit()) item.stackSize = getInventoryStackLimit();
+		if (item != null && item.stackSize > getInventoryStackLimit())
+			item.stackSize = getInventoryStackLimit();
+		worldObj.markBlockRangeForRenderUpdate(pos, pos.add(1, 1, 1));
 	}
 
 	@Override
@@ -264,7 +275,8 @@ public class TileEntityEssenceInfuser extends TileEntity implements IInventory, 
 	@Override
 	public boolean isUseableByPlayer(EntityPlayer player)
 	{
-		if (worldObj.getTileEntity(pos) != this) return false;
+		if (worldObj.getTileEntity(pos) != this)
+			return false;
 		double xOffset = 0.5;
 		double yOffset = 0.5;
 		double zOffset = 0.5;
@@ -307,7 +319,8 @@ public class TileEntityEssenceInfuser extends TileEntity implements IInventory, 
 		{
 			NBTTagCompound item = inventory.getCompoundTagAt(i);
 			byte slot = item.getByte("Slot");
-			if (slot >= 0 && slot < slots.length) slots[slot] = ItemStack.loadItemStackFromNBT(item);
+			if (slot >= 0 && slot < slots.length)
+				slots[slot] = ItemStack.loadItemStackFromNBT(item);
 		}
 
 		infuseTime = tagCompound.getInteger("InfuseTime");
@@ -341,7 +354,8 @@ public class TileEntityEssenceInfuser extends TileEntity implements IInventory, 
 	public ItemStack removeStackFromSlot(int index)
 	{
 		ItemStack item = getStackInSlot(index);
-		if (item != null) setInventorySlotContents(index, null);
+		if (item != null)
+			setInventorySlotContents(index, null);
 		return item;
 	}
 
@@ -377,35 +391,35 @@ public class TileEntityEssenceInfuser extends TileEntity implements IInventory, 
 
 	}
 
-    @Override
-    public boolean shouldRefresh(World world, BlockPos pos, IBlockState oldState, IBlockState newState)
-    {
-        return oldState.getBlock() != newState.getBlock();
-    }
+	@Override
+	public boolean shouldRefresh(World world, BlockPos pos, IBlockState oldState, IBlockState newState)
+	{
+		return oldState.getBlock() != newState.getBlock();
+	}
 
-    @Override
-    public final SPacketUpdateTileEntity getUpdatePacket()
-    {
-        return new SPacketUpdateTileEntity(getPos(), -999, writeToNBT(new NBTTagCompound()));
-    }
+	@Override
+	public final SPacketUpdateTileEntity getUpdatePacket()
+	{
+		return new SPacketUpdateTileEntity(getPos(), -999, writeToNBT(new NBTTagCompound()));
+	}
 
-    @Override
-    @SideOnly(Side.CLIENT)
-    public final void onDataPacket(NetworkManager net, SPacketUpdateTileEntity pkt)
-    {
-        super.onDataPacket(net, pkt);
-        readFromNBT(pkt.getNbtCompound());
-    }
+	@Override
+	@SideOnly(Side.CLIENT)
+	public final void onDataPacket(NetworkManager net, SPacketUpdateTileEntity pkt)
+	{
+		super.onDataPacket(net, pkt);
+		readFromNBT(pkt.getNbtCompound());
+	}
 
-    @Override
-    public final NBTTagCompound getUpdateTag()
-    {
-        return writeToNBT(new NBTTagCompound());
-    }
+	@Override
+	public final NBTTagCompound getUpdateTag()
+	{
+		return writeToNBT(new NBTTagCompound());
+	}
 
-    @Override
-    public final void handleUpdateTag(NBTTagCompound tag)
-    {
-        readFromNBT(tag);
-    }
+	@Override
+	public final void handleUpdateTag(NBTTagCompound tag)
+	{
+		readFromNBT(tag);
+	}
 }

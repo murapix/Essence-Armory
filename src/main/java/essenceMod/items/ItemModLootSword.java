@@ -4,7 +4,6 @@ import java.util.List;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.creativetab.CreativeTabs;
-import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.attributes.AttributeModifier;
@@ -20,6 +19,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import essenceMod.registry.ModArmory;
+import essenceMod.registry.crafting.InfuserRecipes;
 import essenceMod.registry.crafting.upgrades.Upgrade;
 import essenceMod.registry.crafting.upgrades.UpgradeRegistry;
 import essenceMod.tabs.ModTabs;
@@ -48,7 +48,11 @@ public class ItemModLootSword extends ItemSword
 	public Multimap<String, AttributeModifier> getAttributeModifiers(EntityEquipmentSlot slot, ItemStack item)
 	{
 		Multimap<String, AttributeModifier> multimap = HashMultimap.create();
-		multimap.put(SharedMonsterAttributes.ATTACK_DAMAGE.getAttributeUnlocalizedName(), new AttributeModifier(ATTACK_DAMAGE_MODIFIER, "Weapon modifier", ToolMaterial.DIAMOND.getDamageVsEntity() + 4.0F, 0));
+		if (slot == EntityEquipmentSlot.MAINHAND)
+		{
+			multimap.put(SharedMonsterAttributes.ATTACK_DAMAGE.getAttributeUnlocalizedName(), new AttributeModifier(ATTACK_DAMAGE_MODIFIER, "Weapon modifier", ToolMaterial.DIAMOND.getDamageVsEntity() + 4.0F, 0));
+			multimap.put(SharedMonsterAttributes.ATTACK_SPEED.getAttributeUnlocalizedName(), new AttributeModifier(ATTACK_SPEED_MODIFIER, "Weapon modifier", -2.4, 0));
+		}
 		return multimap;
 	}
 	
@@ -56,15 +60,17 @@ public class ItemModLootSword extends ItemSword
 	public void onCreated(ItemStack item, World world, EntityPlayer entityPlayer)
 	{
 		NBTTagCompound compound = item.hasTagCompound() ? item.getTagCompound() : new NBTTagCompound();
-		compound.setInteger("Level", 0);
+		compound.setInteger("Level", item.getMetadata());
 		item.setTagCompound(compound);
-		if (EnchantmentHelper.getEnchantmentLevel(ModArmory.shardLooter, item) == 0) item.addEnchantment(ModArmory.shardLooter, 1);
+		item.addEnchantment(ModArmory.shardLooter, 1);
+		InfuserRecipes.addUpgrade(item, UpgradeRegistry.ShardSwordLooting.setLevel(item.getMetadata() + 1));
 	}
 	
 	@Override
 	public void onUpdate(ItemStack item, World world, Entity entity, int i, boolean b)
 	{
-		onCreated(item, world, (EntityPlayer) entity);
+		if (!item.hasTagCompound())
+			onCreated(item, world, (EntityPlayer) entity);
 	}
 	
 	@SideOnly(Side.CLIENT)

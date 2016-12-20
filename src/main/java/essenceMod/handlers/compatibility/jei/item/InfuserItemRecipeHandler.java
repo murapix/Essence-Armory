@@ -15,7 +15,7 @@ public class InfuserItemRecipeHandler implements IRecipeHandler<ItemRecipe>
 	@Override
 	public String getRecipeCategoryUid()
 	{
-		return "essenceArmory.infuserItem";
+		return InfuserItemRecipeCategory.UID;
 	}
 	
 	@Override
@@ -33,6 +33,6 @@ public class InfuserItemRecipeHandler implements IRecipeHandler<ItemRecipe>
 	@Override
 	public String getRecipeCategoryUid(ItemRecipe recipe)
 	{
-		return null;
+		return getRecipeCategoryUid();
 	}
 }

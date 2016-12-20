@@ -3,13 +3,17 @@ package essenceMod.enchantment;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnumEnchantmentType;
 import net.minecraft.inventory.EntityEquipmentSlot;
+import net.minecraft.util.ResourceLocation;
+import essenceMod.handlers.ConfigHandler;
+import essenceMod.utility.Reference;
 
 public class EnchantmentShard extends Enchantment
 {
-	public EnchantmentShard(int id, int rarity)
+	public EnchantmentShard()
 	{
-		super(Rarity.COMMON, EnumEnchantmentType.WEAPON, new EntityEquipmentSlot[]{ EntityEquipmentSlot.MAINHAND, EntityEquipmentSlot.OFFHAND });
+		super(Rarity.COMMON, EnumEnchantmentType.WEAPON, new EntityEquipmentSlot[]{ EntityEquipmentSlot.MAINHAND });
 		this.setName("shardLoot");
+		Enchantment.REGISTRY.register(ConfigHandler.shardEnchantID, new ResourceLocation(Reference.MODID + ".enchantment_shard"), this);
 	}
 	
 	public int getMinEnchantability(int level)

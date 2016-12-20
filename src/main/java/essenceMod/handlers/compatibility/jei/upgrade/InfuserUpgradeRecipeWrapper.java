@@ -44,6 +44,9 @@ public class InfuserUpgradeRecipeWrapper implements IRecipeWrapper
 	public List getInputs()
 	{
 		input.add(0, item);
+		if (input.get(1) instanceof ItemStack)
+			if (ItemStack.areItemStacksEqual((ItemStack) input.get(0), (ItemStack) input.get(1)))
+				input.remove(0);
 		return input;
 	}
 

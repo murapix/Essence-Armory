@@ -15,7 +15,7 @@ public class InfuserUpgradeRecipeHandler implements IRecipeHandler<UpgradeRecipe
 	@Override
 	public String getRecipeCategoryUid()
 	{
-		return "essenceArmory.infuserUpgrade";
+		return InfuserUpgradeRecipeCategory.UID;
 	}
 	
 	@Override
@@ -33,6 +33,6 @@ public class InfuserUpgradeRecipeHandler implements IRecipeHandler<UpgradeRecipe
 	@Override
 	public String getRecipeCategoryUid(UpgradeRecipe recipe)
 	{
-		return null;
+		return getRecipeCategoryUid();
 	}
 }

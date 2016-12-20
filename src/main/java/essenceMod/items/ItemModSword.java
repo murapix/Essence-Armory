@@ -15,7 +15,6 @@ import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemSword;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.potion.Potion;
 import net.minecraft.potion.PotionEffect;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EntityDamageSource;
@@ -67,7 +66,11 @@ public class ItemModSword extends ItemSword implements IUpgradeable
 	public Multimap<String, AttributeModifier> getAttributeModifiers(EntityEquipmentSlot slot, ItemStack item)
 	{
 		Multimap<String, AttributeModifier> multimap = HashMultimap.create();
-		multimap.put(SharedMonsterAttributes.ATTACK_DAMAGE.getAttributeUnlocalizedName(), new AttributeModifier(ATTACK_DAMAGE_MODIFIER, "Weapon modifier", item.getTagCompound().getFloat("weaponDamage"), 0));
+		if (slot == EntityEquipmentSlot.MAINHAND)
+		{
+			multimap.put(SharedMonsterAttributes.ATTACK_DAMAGE.getAttributeUnlocalizedName(), new AttributeModifier(ATTACK_DAMAGE_MODIFIER, "Weapon modifier", item.getTagCompound().getFloat("weaponDamage"), 0));
+			multimap.put(SharedMonsterAttributes.ATTACK_SPEED.getAttributeUnlocalizedName(), new AttributeModifier(ATTACK_SPEED_MODIFIER, "Weapon modifier", -2.4, 0));
+		}
 		return multimap;
 	}
 
@@ -254,13 +257,6 @@ public class ItemModSword extends ItemSword implements IUpgradeable
 		int magic = Upgrade.getUpgradeLevel(item, UpgradeRegistry.WeaponMagicDamage);
 		int fire = Upgrade.getUpgradeLevel(item, UpgradeRegistry.WeaponFireDamage);
 		int wither = Upgrade.getUpgradeLevel(item, UpgradeRegistry.WeaponWitherDamage);
-		int chaos = Upgrade.getUpgradeLevel(item, UpgradeRegistry.WeaponChaosDamage);
-		int divine = Upgrade.getUpgradeLevel(item, UpgradeRegistry.WeaponDivineDamage);
-		int taint = Upgrade.getUpgradeLevel(item, UpgradeRegistry.WeaponTaintDamage);
-		int frost = Upgrade.getUpgradeLevel(item, UpgradeRegistry.WeaponFrostDamage);
-		int holy = Upgrade.getUpgradeLevel(item, UpgradeRegistry.WeaponHolyDamage);
-		int lightning = Upgrade.getUpgradeLevel(item, UpgradeRegistry.WeaponLightningDamage);
-		int wind = Upgrade.getUpgradeLevel(item, UpgradeRegistry.WeaponWindDamage);
 
 		if (level != 0) list.add("Level: " + UtilityHelper.toRoman(level));
 		if (burn != 0) list.add(I18n.translateToLocal(UpgradeRegistry.WeaponFireDoT.name) + ": Attacks light enemies on fire for " + burn + " seconds.");
@@ -293,41 +289,6 @@ public class ItemModSword extends ItemSword implements IUpgradeable
 		{
 			if (ConfigHandler.isWitherDamagePercent) list.add(I18n.translateToLocal(UpgradeRegistry.WeaponWitherDamage.name) + ": Attacks deal " + wither * ConfigHandler.witherDamageMulti * 100 + "% more damage as wither damage.");
 			else list.add(I18n.translateToLocal(UpgradeRegistry.WeaponWitherDamage.name) + ": Attacks deal " + wither * ConfigHandler.witherDamageAmount + " extra damage as wither damage.");
-		}
-		if (chaos != 0)
-		{
-			if (ConfigHandler.isChaosDamagePercent) list.add(I18n.translateToLocal(UpgradeRegistry.WeaponChaosDamage.name) + ": Attacks deal " + chaos * ConfigHandler.chaosDamageMulti * 100 + "% more damage as chaos damage.");
-			else list.add(I18n.translateToLocal(UpgradeRegistry.WeaponChaosDamage.name) + ": Attacks deal " + chaos * ConfigHandler.chaosDamageAmount + " extra damage as chaos damage.");
-		}
-		if (divine != 0)
-		{
-			if (ConfigHandler.isDivineDamagePercent) list.add(I18n.translateToLocal(UpgradeRegistry.WeaponDivineDamage.name) + ": Attacks deal " + divine * ConfigHandler.divineDamageMulti * 100 + "% more damage as divine damage.");
-			else list.add(I18n.translateToLocal(UpgradeRegistry.WeaponDivineDamage.name) + ": Attacks deal " + divine * ConfigHandler.divineDamageAmount + " extra damage as divine damage.");
-		}
-		if (taint != 0)
-		{
-			if (ConfigHandler.isDivineDamagePercent) list.add(I18n.translateToLocal(UpgradeRegistry.WeaponTaintDamage.name) + ": Attacks deal " + taint * ConfigHandler.taintDamageMulti * 100 + "% more damage as taint damage.");
-			else list.add(I18n.translateToLocal(UpgradeRegistry.WeaponTaintDamage.name) + ": Attacks deal " + taint * ConfigHandler.taintDamageAmount + " extra damage as taint damage.");
-		}
-		if (frost != 0)
-		{
-			if (ConfigHandler.isDivineDamagePercent) list.add(I18n.translateToLocal(UpgradeRegistry.WeaponFrostDamage.name) + ": Attacks deal " + frost * ConfigHandler.frostDamageMulti * 100 + "% more damage as frost damage.");
-			else list.add(I18n.translateToLocal(UpgradeRegistry.WeaponFrostDamage.name) + ": Attacks deal " + frost * ConfigHandler.frostDamageAmount + " extra damage as frost damage.");
-		}
-		if (holy != 0)
-		{
-			if (ConfigHandler.isDivineDamagePercent) list.add(I18n.translateToLocal(UpgradeRegistry.WeaponHolyDamage.name) + ": Attacks deal " + holy * ConfigHandler.holyDamageMulti * 100 + "% more damage as holy damage.");
-			else list.add(I18n.translateToLocal(UpgradeRegistry.WeaponHolyDamage.name) + ": Attacks deal " + holy * ConfigHandler.holyDamageAmount + " extra damage as holy damage.");
-		}
-		if (lightning != 0)
-		{
-			if (ConfigHandler.isDivineDamagePercent) list.add(I18n.translateToLocal(UpgradeRegistry.WeaponLightningDamage.name) + ": Attacks deal " + lightning * ConfigHandler.lightningDamageMulti * 100 + "% more damage as lightning damage.");
-			else list.add(I18n.translateToLocal(UpgradeRegistry.WeaponLightningDamage.name) + ": Attacks deal " + lightning * ConfigHandler.lightningDamageAmount + " extra damage as lightning damage.");
-		}
-		if (wind != 0)
-		{
-			if (ConfigHandler.isDivineDamagePercent) list.add(I18n.translateToLocal(UpgradeRegistry.WeaponWindDamage.name) + ": Attacks deal " + wind * ConfigHandler.windDamageMulti * 100 + "% more damage as wind damage.");
-			else list.add(I18n.translateToLocal(UpgradeRegistry.WeaponWindDamage.name) + ": Attacks deal " + wind * ConfigHandler.windDamageAmount + " extra damage as wind damage.");
 		}
 		return list;
 	}

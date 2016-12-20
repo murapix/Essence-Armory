@@ -2,7 +2,8 @@
     "forge_marker": 1,
     "defaults": {
         "custom": { "flip-v": true },
-        "model": "essencearmory:essenceInfuser.obj"
+        "model": "essencearmory:essenceInfuser.obj",
+        "transform": "forge:default-block"
     },
     "variants": {
         "normal": [{}],

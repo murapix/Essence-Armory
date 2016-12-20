@@ -15,8 +15,10 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.translation.I18n;
 import essenceMod.utility.Reference;
 
+@SuppressWarnings({ "rawtypes", "deprecation" })
 public class InfuserItemRecipeCategory implements IRecipeCategory
 {
+	public static final String UID = Reference.MODID + ".item_recipe";
 	private final IDrawable background;
 	private final String localizedName;
 	private final IDrawable overlay;
@@ -24,14 +26,14 @@ public class InfuserItemRecipeCategory implements IRecipeCategory
 	public InfuserItemRecipeCategory(IGuiHelper guiHelper)
 	{
 		background = guiHelper.createBlankDrawable(150, 110);
-		localizedName = I18n.translateToLocal("EssenceArmory.nei.infuser.item");
+		localizedName = I18n.translateToLocal(Reference.MODID + ".jei.infuser.item");
 		overlay = guiHelper.createDrawable(new ResourceLocation(Reference.MODID + ":textures/gui/infuserOverlay.png"), 0, 0, 156, 122);
 	}
 	
 	@Override
 	public String getUid()
 	{
-		return "essenceArmory.infuserItem";
+		return UID;
 	}
 	
 	@Override
@@ -59,6 +61,7 @@ public class InfuserItemRecipeCategory implements IRecipeCategory
 	@Override
 	public void drawAnimations(Minecraft minecraft){}
 	
+	@SuppressWarnings("unchecked")
 	@Override
 	public void setRecipe(IRecipeLayout recipeLayout, IRecipeWrapper recipeWrapper)
 	{
@@ -93,9 +96,32 @@ public class InfuserItemRecipeCategory implements IRecipeCategory
 		return null;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public void setRecipe(IRecipeLayout recipeLayout, IRecipeWrapper recipeWrapper, IIngredients ingredients)
 	{
+		if (!(recipeWrapper instanceof InfuserItemRecipeWrapper)) return;
+		InfuserItemRecipeWrapper wrapper = (InfuserItemRecipeWrapper) recipeWrapper;
 		
+		List inputs = wrapper.getInputs();
+		recipeLayout.getItemStacks().init(0, true, 52, 52);
+		recipeLayout.getItemStacks().set(0, (ItemStack) inputs.get(0));
+		
+		float degreePerInput = 360F / (inputs.size() - 1);
+		float currentDegree = -90F;
+		
+		int i;
+		for (i = 1; i < inputs.size(); i++)
+		{
+			int posX = (int) Math.round(52 + Math.cos(currentDegree * Math.PI / 180D) * 36);
+			int posY = (int) Math.round(52 + Math.sin(currentDegree * Math.PI / 180D) * 36);
+			recipeLayout.getItemStacks().init(i, true, posX, posY);
+			Object o = inputs.get(i);
+			if (o instanceof Collection) recipeLayout.getItemStacks().set(i, (Collection<ItemStack>) o);
+			if (o instanceof ItemStack) recipeLayout.getItemStacks().set(i, (ItemStack) o);
+			currentDegree += degreePerInput;
+		}
+		recipeLayout.getItemStacks().init(i, false, 115, 52);
+		recipeLayout.getItemStacks().set(i, wrapper.getOutputs().get(0));
 	}
 }

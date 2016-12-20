@@ -15,37 +15,39 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.translation.I18n;
 import essenceMod.utility.Reference;
 
+@SuppressWarnings({ "rawtypes", "deprecation" })
 public class InfuserUpgradeRecipeCategory implements IRecipeCategory
 {
+	public static final String UID = Reference.MODID + ".upgrade_recipe";
 	private final IDrawable background;
 	private final String localizedName;
 	private final IDrawable overlay;
-	
+
 	public InfuserUpgradeRecipeCategory(IGuiHelper guiHelper)
 	{
 		background = guiHelper.createBlankDrawable(150, 110);
-		localizedName = I18n.translateToLocal("EssenceArmory.nei.infuser.upgrade");
+		localizedName = I18n.translateToLocal(Reference.MODID + ".jei.infuser.upgrade");
 		overlay = guiHelper.createDrawable(new ResourceLocation(Reference.MODID + ":textures/gui/infuserOverlay.png"), 0, 0, 156, 122);
 	}
-	
+
 	@Override
 	public String getUid()
 	{
-		return "essenceArmory.infuserUpgrade";
+		return UID;
 	}
-	
+
 	@Override
 	public String getTitle()
 	{
 		return localizedName;
 	}
-	
+
 	@Override
 	public IDrawable getBackground()
 	{
 		return background;
 	}
-	
+
 	@Override
 	public void drawExtras(Minecraft minecraft)
 	{
@@ -55,23 +57,26 @@ public class InfuserUpgradeRecipeCategory implements IRecipeCategory
 		GlStateManager.disableBlend();
 		GlStateManager.disableAlpha();
 	}
-	
+
 	@Override
-	public void drawAnimations(Minecraft minecraft){}
-	
+	public void drawAnimations(Minecraft minecraft)
+	{}
+
 	@Override
+	@SuppressWarnings("unchecked")
 	public void setRecipe(IRecipeLayout recipeLayout, IRecipeWrapper recipeWrapper)
 	{
-		if (!(recipeWrapper instanceof InfuserUpgradeRecipeWrapper)) return;
+		if (!(recipeWrapper instanceof InfuserUpgradeRecipeWrapper))
+			return;
 		InfuserUpgradeRecipeWrapper wrapper = (InfuserUpgradeRecipeWrapper) recipeWrapper;
-		
-		List inputs = wrapper.getInputs();
+
+		List<?> inputs = wrapper.getInputs();
 		recipeLayout.getItemStacks().init(0, true, 52, 52);
 		recipeLayout.getItemStacks().set(0, (ItemStack) inputs.get(0));
-		
+
 		float degreePerInput = 360F / (inputs.size() - 1);
 		float currentDegree = -90F;
-		
+
 		int i;
 		for (i = 1; i < inputs.size(); i++)
 		{
@@ -79,8 +84,10 @@ public class InfuserUpgradeRecipeCategory implements IRecipeCategory
 			int posY = (int) Math.round(52 + Math.sin(currentDegree * Math.PI / 180D) * 36);
 			recipeLayout.getItemStacks().init(i, true, posX, posY);
 			Object o = inputs.get(i);
-			if (o instanceof Collection) recipeLayout.getItemStacks().set(i, (Collection<ItemStack>) o);
-			if (o instanceof ItemStack) recipeLayout.getItemStacks().set(i, (ItemStack) o);
+			if (o instanceof Collection)
+				recipeLayout.getItemStacks().set(i, (Collection<ItemStack>) o);
+			if (o instanceof ItemStack)
+				recipeLayout.getItemStacks().set(i, (ItemStack) o);
 			currentDegree += degreePerInput;
 		}
 		recipeLayout.getItemStacks().init(i, false, 115, 52);
@@ -94,8 +101,34 @@ public class InfuserUpgradeRecipeCategory implements IRecipeCategory
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public void setRecipe(IRecipeLayout recipeLayout, IRecipeWrapper recipeWrapper, IIngredients ingredients)
 	{
-		
+		if (!(recipeWrapper instanceof InfuserUpgradeRecipeWrapper))
+			return;
+		InfuserUpgradeRecipeWrapper wrapper = (InfuserUpgradeRecipeWrapper) recipeWrapper;
+
+		List<?> inputs = wrapper.getInputs();
+		recipeLayout.getItemStacks().init(0, true, 52, 52);
+		recipeLayout.getItemStacks().set(0, (ItemStack) inputs.get(0));
+
+		float degreePerInput = 360F / (inputs.size() - 1);
+		float currentDegree = -90F;
+
+		int i;
+		for (i = 1; i < inputs.size(); i++)
+		{
+			int posX = (int) Math.round(52 + Math.cos(currentDegree * Math.PI / 180D) * 36);
+			int posY = (int) Math.round(52 + Math.sin(currentDegree * Math.PI / 180D) * 36);
+			recipeLayout.getItemStacks().init(i, true, posX, posY);
+			Object o = inputs.get(i);
+			if (o instanceof Collection)
+				recipeLayout.getItemStacks().set(i, (Collection<ItemStack>) o);
+			if (o instanceof ItemStack)
+				recipeLayout.getItemStacks().set(i, (ItemStack) o);
+			currentDegree += degreePerInput;
+		}
+		recipeLayout.getItemStacks().init(i, false, 115, 52);
+		recipeLayout.getItemStacks().set(i, wrapper.getOutputs().get(0));
 	}
 }

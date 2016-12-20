@@ -20,7 +20,6 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import baubles.api.BaubleType;
 import baubles.api.BaublesApi;
-import essenceMod.handlers.ConfigHandler;
 import essenceMod.registry.crafting.InfuserRecipes;
 import essenceMod.registry.crafting.upgrades.Upgrade;
 import essenceMod.registry.crafting.upgrades.UpgradeRegistry;
@@ -30,7 +29,7 @@ import essenceMod.utility.UtilityHelper;
 public class ItemAmulet extends ItemBauble
 {
 	public int level;
-	public static final int numSubTypes = ConfigHandler.thaumcraftIntegration ? 27 : 22;
+	public static final int numSubTypes = 22;
 
 	public ItemAmulet()
 	{
@@ -67,7 +66,6 @@ public class ItemAmulet extends ItemBauble
 		else if (meta <= 15) InfuserRecipes.addUpgrade(item, UpgradeRegistry.BaubleFireImmunity.setLevel(meta - 10));
 		else if (meta <= 20) InfuserRecipes.addUpgrade(item, UpgradeRegistry.AmuletLooting.setLevel(meta - 15));
 		else if (meta <= 21) InfuserRecipes.addUpgrade(item, UpgradeRegistry.AmuletFlight.setLevel(meta - 20));
-		else if (meta <= 26) InfuserRecipes.addUpgrade(item, UpgradeRegistry.BaubleTaintImmunity.setLevel(meta - 21));
 	}
 
 	@SideOnly(Side.CLIENT)

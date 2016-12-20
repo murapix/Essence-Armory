@@ -14,7 +14,6 @@ import net.minecraft.init.MobEffects;
 import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.potion.Potion;
 import net.minecraft.potion.PotionEffect;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.ResourceLocation;
@@ -52,6 +51,7 @@ public class EssenceEventHandler
 		MinecraftForge.ORE_GEN_BUS.register(new EssenceEventHandler());
 	}
 
+	@SuppressWarnings("deprecation")
 	@SubscribeEvent(priority = EventPriority.NORMAL, receiveCanceled = true)
 	public void onLivingDropsEvent(LivingDropsEvent event)
 	{
@@ -250,35 +250,14 @@ public class EssenceEventHandler
 					float fireDamage = Upgrade.getUpgradeLevel(event.getItemStack(), UpgradeRegistry.WeaponFireDamage);
 					float witherDamage = Upgrade.getUpgradeLevel(event.getItemStack(), UpgradeRegistry.WeaponWitherDamage);
 					float magicDamage = Upgrade.getUpgradeLevel(event.getItemStack(), UpgradeRegistry.WeaponMagicDamage);
-					float chaosDamage = Upgrade.getUpgradeLevel(event.getItemStack(), UpgradeRegistry.WeaponChaosDamage);
-					float divineDamage = Upgrade.getUpgradeLevel(event.getItemStack(), UpgradeRegistry.WeaponDivineDamage);
-					float taintDamage = Upgrade.getUpgradeLevel(event.getItemStack(), UpgradeRegistry.WeaponTaintDamage);
-					float frostDamage = Upgrade.getUpgradeLevel(event.getItemStack(), UpgradeRegistry.WeaponFrostDamage);
-					float holyDamage = Upgrade.getUpgradeLevel(event.getItemStack(), UpgradeRegistry.WeaponHolyDamage);
-					float lightningDamage = Upgrade.getUpgradeLevel(event.getItemStack(), UpgradeRegistry.WeaponLightningDamage);
-					float windDamage = Upgrade.getUpgradeLevel(event.getItemStack(), UpgradeRegistry.WeaponWindDamage);
 
 					fireDamage *= ConfigHandler.isFireDamagePercent ? weaponDamage * ConfigHandler.fireDamageMulti : ConfigHandler.fireDamageAmount;
 					witherDamage *= ConfigHandler.isWitherDamagePercent ? weaponDamage * ConfigHandler.witherDamageMulti : ConfigHandler.witherDamageAmount;
 					magicDamage *= ConfigHandler.isMagicDamagePercent ? weaponDamage * ConfigHandler.magicDamageMulti : ConfigHandler.magicDamageAmount;
-					chaosDamage *= ConfigHandler.isChaosDamagePercent ? weaponDamage * ConfigHandler.chaosDamageMulti : ConfigHandler.chaosDamageAmount;
-					divineDamage *= ConfigHandler.isDivineDamagePercent ? weaponDamage * ConfigHandler.divineDamageMulti : ConfigHandler.divineDamageAmount;
-					taintDamage *= ConfigHandler.isTaintDamagePercent ? weaponDamage * ConfigHandler.taintDamageMulti : ConfigHandler.taintDamageAmount;
-					frostDamage *= ConfigHandler.isFrostDamagePercent ? weaponDamage * ConfigHandler.frostDamageMulti : ConfigHandler.frostDamageAmount;
-					holyDamage *= ConfigHandler.isHolyDamagePercent ? weaponDamage * ConfigHandler.holyDamageMulti : ConfigHandler.holyDamageAmount;
-					lightningDamage *= ConfigHandler.isLightningDamagePercent ? weaponDamage * ConfigHandler.lightningDamageMulti : ConfigHandler.lightningDamageAmount;
-					windDamage *= ConfigHandler.isWindDamagePercent ? weaponDamage * ConfigHandler.windDamageMulti : ConfigHandler.windDamageAmount;
 
 					double fireText = Math.round(fireDamage * 4) / 4D;
 					double witherText = Math.round(witherDamage * 4) / 4D;
 					double magicText = Math.round(magicDamage * 4) / 4D;
-					double chaosText = Math.round(chaosDamage * 4) / 4D;
-					double divineText = Math.round(divineDamage * 4) / 4D;
-					double taintText = Math.round(taintDamage * 4) / 4D;
-					double frostText = Math.round(frostDamage * 4) / 4D;
-					double holyText = Math.round(holyDamage * 4) / 4D;
-					double lightningText = Math.round(lightningDamage * 4) / 4D;
-					double windText = Math.round(windDamage * 4) / 4D;
 
 					if (fireText != 0)
 					{
@@ -297,48 +276,6 @@ public class EssenceEventHandler
 						if (magicText == (int) magicText)
 							iterator.add(TextFormatting.BLUE + "+" + ((int) magicText) + " Magic Damage");
 						else iterator.add(TextFormatting.BLUE + "+" + magicText + " Magic Damage");
-					}
-					if (chaosText != 0)
-					{
-						if (chaosText == (int) chaosText)
-							iterator.add(TextFormatting.BLUE + "+" + ((int) chaosText) + " Chaos Damage");
-						else iterator.add(TextFormatting.BLUE + "+" + chaosText + " Chaos Damage");
-					}
-					if (divineText != 0)
-					{
-						if (divineText == (int) divineText)
-							iterator.add(TextFormatting.BLUE + "+" + ((int) divineText) + " Divine Damage");
-						else iterator.add(TextFormatting.BLUE + "+" + divineText + " Divine Damage");
-					}
-					if (taintText != 0)
-					{
-						if (taintText == (int) taintText)
-							iterator.add(TextFormatting.BLUE + "+" + ((int) taintText) + " Flux Damage");
-						else iterator.add(TextFormatting.BLUE + "+" + taintText + " Flux Damage");
-					}
-					if (frostText != 0)
-					{
-						if (frostText == (int) frostText)
-							iterator.add(TextFormatting.BLUE + "+" + ((int) frostText) + " Frost Damage");
-						else iterator.add(TextFormatting.BLUE + "+" + frostText + " Frost Damage");
-					}
-					if (holyText != 0)
-					{
-						if (holyText == (int) holyText)
-							iterator.add(TextFormatting.BLUE + "+" + ((int) holyText) + " Holy Damage");
-						else iterator.add(TextFormatting.BLUE + "+" + holyText + " Holy Damage");
-					}
-					if (lightningText != 0)
-					{
-						if (lightningText == (int) lightningText)
-							iterator.add(TextFormatting.BLUE + "+" + ((int) lightningText) + " Lightning Damage");
-						else iterator.add(TextFormatting.BLUE + "+" + lightningText + " Lightning Damage");
-					}
-					if (windText != 0)
-					{
-						if (windText == (int) windText)
-							iterator.add(TextFormatting.BLUE + "+" + ((int) windText) + " Wind Damage");
-						else iterator.add(TextFormatting.BLUE + "+" + windText + " Wind Damage");
 					}
 					break;
 				}

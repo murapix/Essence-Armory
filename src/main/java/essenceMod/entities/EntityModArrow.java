@@ -9,12 +9,11 @@ import net.minecraft.entity.monster.EntityEnderman;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.entity.projectile.EntityArrow;
-import net.minecraft.init.Items;
+import net.minecraft.entity.projectile.EntityTippedArrow;
 import net.minecraft.init.MobEffects;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.play.server.SPacketChangeGameState;
-import net.minecraft.potion.Potion;
 import net.minecraft.potion.PotionEffect;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EntityDamageSource;
@@ -27,7 +26,7 @@ import essenceMod.items.ItemModBow;
 import essenceMod.registry.crafting.upgrades.Upgrade;
 import essenceMod.registry.crafting.upgrades.UpgradeRegistry;
 
-public class EntityModArrow extends EntityArrow
+public class EntityModArrow extends EntityTippedArrow
 {
 	protected int xTile = -1;
 	protected int yTile = -1;
@@ -41,8 +40,15 @@ public class EntityModArrow extends EntityArrow
 	protected int knockbackStrength;
 
 	protected ItemStack bow;
-
-	public EntityModArrow(World world, EntityLivingBase entity, float charge, ItemStack bow)
+	
+	public static EntityArrow createArrow(World world, ItemStack bow, ItemStack potion, EntityLivingBase shooter)
+	{
+		EntityModArrow arrow = new EntityModArrow(world, shooter, bow);
+		arrow.setPotionEffect(potion);
+		return arrow;
+	}
+	
+	public EntityModArrow(World world, EntityLivingBase entity, ItemStack bow)
 	{
 		super(world, entity);
 
@@ -218,7 +224,8 @@ public class EntityModArrow extends EntityArrow
 			this.posX -= this.motionX / (double) f2 * 0.05000000074505806D;
 			this.posY -= this.motionY / (double) f2 * 0.05000000074505806D;
 			this.posZ -= this.motionZ / (double) f2 * 0.05000000074505806D;
-			this.playSound(SoundEvents.ENTITY_ARROW_HIT, 1.0F, 1.2F / (this.rand.nextFloat() * 0.2F + 0.9F));
+			if (!this.inGround)
+				this.playSound(SoundEvents.ENTITY_ARROW_HIT, 1.0F, 1.2F / (this.rand.nextFloat() * 0.2F + 0.9F));
 			this.inGround = true;
 			this.arrowShake = 7;
 			this.setIsCritical(false);
@@ -230,9 +237,4 @@ public class EntityModArrow extends EntityArrow
 		}
 	}
 
-	@Override
-	protected ItemStack getArrowStack()
-	{
-		return new ItemStack(Items.ARROW);
-	}
 }

@@ -2,21 +2,35 @@ package essenceMod.items;
 
 import java.util.ArrayList;
 import java.util.List;
+import javax.annotation.Nullable;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.renderer.block.model.ModelBakery;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
+import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.projectile.EntityArrow;
+import net.minecraft.init.Enchantments;
+import net.minecraft.init.Items;
+import net.minecraft.init.SoundEvents;
 import net.minecraft.item.EnumAction;
+import net.minecraft.item.IItemPropertyGetter;
+import net.minecraft.item.ItemArrow;
 import net.minecraft.item.ItemBow;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.stats.StatList;
+import net.minecraft.util.EnumHand;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.SoundCategory;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.translation.I18n;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import essenceMod.entities.EntityModArrow;
 import essenceMod.handlers.ConfigHandler;
 import essenceMod.registry.ModArmory;
 import essenceMod.registry.crafting.upgrades.Upgrade;
@@ -42,6 +56,30 @@ public class ItemModBow extends ItemBow implements IUpgradeable
 		setCreativeTab(ModTabs.tabEssence);
 		setMaxDamage(0);
 		level = 0;
+		this.addPropertyOverride(new ResourceLocation("pull"), new IItemPropertyGetter()
+        {
+            @SideOnly(Side.CLIENT)
+            public float apply(ItemStack stack, @Nullable World worldIn, @Nullable EntityLivingBase entityIn)
+            {
+                if (entityIn == null)
+                {
+                    return 0.0F;
+                }
+                else
+                {
+                    ItemStack itemstack = entityIn.getActiveItemStack();
+                    return itemstack != null && itemstack.getItem() == ModArmory.infusedBow ? (float)(stack.getMaxItemUseDuration() - entityIn.getItemInUseCount()) / 20.0F : 0.0F;
+                }
+            }
+        });
+        this.addPropertyOverride(new ResourceLocation("pulling"), new IItemPropertyGetter()
+        {
+            @SideOnly(Side.CLIENT)
+            public float apply(ItemStack stack, @Nullable World worldIn, @Nullable EntityLivingBase entityIn)
+            {
+                return entityIn != null && entityIn.isHandActive() && entityIn.getActiveItemStack() == stack ? 1.0F : 0.0F;
+            }
+        });
 	}
 
 	@Override
@@ -49,7 +87,6 @@ public class ItemModBow extends ItemBow implements IUpgradeable
 	{
 		NBTTagCompound compound = item.hasTagCompound() ? item.getTagCompound() : new NBTTagCompound();
 		compound.setInteger("Level", level);
-		compound.setBoolean("ItemInUse", false);
 		item.setTagCompound(compound);
 		item.addEnchantment(ModArmory.shardLooter, 1);
 	}
@@ -57,13 +94,123 @@ public class ItemModBow extends ItemBow implements IUpgradeable
 	@SideOnly(Side.CLIENT)
 	public void initModel()
 	{
-		for (int i = 0; i < 4; i++)
+		ModelBakery.registerItemVariants(this, new ModelResourceLocation(getRegistryName(), "inventory"));
+		Minecraft.getMinecraft().getRenderItem().getItemModelMesher().register(this, 0, new ModelResourceLocation(getRegistryName(), "inventory"));
+		for (int i = 0; i < 3; i++)
 		{
 			ModelBakery.registerItemVariants(this, new ModelResourceLocation(getRegistryName() + "_" + i, "inventory"));
-			Minecraft.getMinecraft().getRenderItem().getItemModelMesher().register(this, i, new ModelResourceLocation(getRegistryName() + "_" + i, "inventory"));
+			Minecraft.getMinecraft().getRenderItem().getItemModelMesher().register(this, i + 1, new ModelResourceLocation(getRegistryName() + "_" + i, "inventory"));
 		}
 	}
+	
+	public void onPlayerStoppedUsing(ItemStack stack, World worldIn, EntityLivingBase entityLiving, int timeLeft)
+    {
+        if (entityLiving instanceof EntityPlayer)
+        {
+            EntityPlayer entityplayer = (EntityPlayer)entityLiving;
+            boolean flag = entityplayer.capabilities.isCreativeMode || EnchantmentHelper.getEnchantmentLevel(Enchantments.INFINITY, stack) > 0;
+            ItemStack itemstack = this.findAmmo(entityplayer);
 
+            int i = this.getMaxItemUseDuration(stack) - timeLeft;
+            i = net.minecraftforge.event.ForgeEventFactory.onArrowLoose(stack, worldIn, (EntityPlayer)entityLiving, i, itemstack != null || flag);
+            if (i < 0) return;
+
+            if (itemstack != null || flag)
+            {
+                if (itemstack == null)
+                {
+                    itemstack = new ItemStack(Items.ARROW);
+                }
+
+                float f = getArrowVelocity(i);
+
+                if ((double)f >= 0.1D)
+                {
+                    boolean flag1 = entityplayer.capabilities.isCreativeMode || (itemstack.getItem() instanceof ItemArrow ? ((ItemArrow)itemstack.getItem()).isInfinite(itemstack, stack, entityplayer) : false);
+
+                    if (!worldIn.isRemote)
+                    {
+                        EntityArrow entityarrow = EntityModArrow.createArrow(worldIn, stack, itemstack, entityplayer);
+                        entityarrow.setAim(entityplayer, entityplayer.rotationPitch, entityplayer.rotationYaw, 0.0F, f * 3.0F, 1.0F);
+
+                        if (f == 1.0F)
+                        {
+                            entityarrow.setIsCritical(true);
+                        }
+
+                        int j = EnchantmentHelper.getEnchantmentLevel(Enchantments.POWER, stack);
+
+                        if (j > 0)
+                        {
+                            entityarrow.setDamage(entityarrow.getDamage() + (double)j * 0.5D + 0.5D);
+                        }
+
+                        int k = EnchantmentHelper.getEnchantmentLevel(Enchantments.PUNCH, stack);
+
+                        if (k > 0)
+                        {
+                            entityarrow.setKnockbackStrength(k);
+                        }
+
+                        if (EnchantmentHelper.getEnchantmentLevel(Enchantments.FLAME, stack) > 0)
+                        {
+                            entityarrow.setFire(100);
+                        }
+
+                        stack.damageItem(1, entityplayer);
+
+                        if (flag1)
+                        {
+                            entityarrow.pickupStatus = EntityArrow.PickupStatus.CREATIVE_ONLY;
+                        }
+
+                        worldIn.spawnEntityInWorld(entityarrow);
+                    }
+
+                    worldIn.playSound((EntityPlayer)null, entityplayer.posX, entityplayer.posY, entityplayer.posZ, SoundEvents.ENTITY_ARROW_SHOOT, SoundCategory.NEUTRAL, 1.0F, 1.0F / (itemRand.nextFloat() * 0.4F + 1.2F) + f * 0.5F);
+
+                    if (!flag1)
+                    {
+                        --itemstack.stackSize;
+
+                        if (itemstack.stackSize == 0)
+                        {
+                            entityplayer.inventory.deleteStack(itemstack);
+                        }
+                    }
+
+                    entityplayer.addStat(StatList.getObjectUseStats(this));
+                }
+            }
+        }
+    }
+
+	protected ItemStack findAmmo(EntityPlayer player)
+    {
+        if (this.isArrow(player.getHeldItem(EnumHand.OFF_HAND)))
+        {
+            return player.getHeldItem(EnumHand.OFF_HAND);
+        }
+        else if (this.isArrow(player.getHeldItem(EnumHand.MAIN_HAND)))
+        {
+            return player.getHeldItem(EnumHand.MAIN_HAND);
+        }
+        else
+        {
+            for (int i = 0; i < player.inventory.getSizeInventory(); ++i)
+            {
+                ItemStack itemstack = player.inventory.getStackInSlot(i);
+
+                if (this.isArrow(itemstack))
+                {
+                    return itemstack;
+                }
+            }
+
+            return null;
+        }
+    }
+	
 	@Override
 	public EnumAction getItemUseAction(ItemStack item)
 	{
@@ -72,6 +219,14 @@ public class ItemModBow extends ItemBow implements IUpgradeable
 
 	public static int getLevel(ItemStack item)
 	{
+		if (!item.hasTagCompound())
+		{
+			NBTTagCompound compound = item.hasTagCompound() ? item.getTagCompound() : new NBTTagCompound();
+			compound.setInteger("Level", 0);
+			compound.setBoolean("ItemInUse", false);
+			item.setTagCompound(compound);
+			item.addEnchantment(ModArmory.shardLooter, 1);
+		}
 		return item.getTagCompound().getInteger("Level");
 	}
 
@@ -104,25 +259,11 @@ public class ItemModBow extends ItemBow implements IUpgradeable
 		fire *= ConfigHandler.isFireDamagePercent ? weaponDamage * ConfigHandler.fireDamageMulti : ConfigHandler.fireDamageAmount;
 		wither *= ConfigHandler.isWitherDamagePercent ? weaponDamage * ConfigHandler.witherDamageMulti : ConfigHandler.witherDamageAmount;
 		magic *= ConfigHandler.isMagicDamagePercent ? weaponDamage * ConfigHandler.magicDamageMulti : ConfigHandler.magicDamageAmount;
-		chaos *= ConfigHandler.isChaosDamagePercent ? weaponDamage * ConfigHandler.chaosDamageMulti : ConfigHandler.chaosDamageAmount;
-		divine *= ConfigHandler.isDivineDamagePercent ? weaponDamage * ConfigHandler.divineDamageMulti : ConfigHandler.divineDamageAmount;
-		taint *= ConfigHandler.isTaintDamagePercent ? weaponDamage * ConfigHandler.taintDamageMulti : ConfigHandler.taintDamageAmount;
-		frost *= ConfigHandler.isFrostDamagePercent ? weaponDamage * ConfigHandler.frostDamageMulti : ConfigHandler.frostDamageAmount;
-		holy *= ConfigHandler.isHolyDamagePercent ? weaponDamage * ConfigHandler.holyDamageMulti : ConfigHandler.holyDamageAmount;
-		lightning *= ConfigHandler.isLightningDamagePercent ? weaponDamage * ConfigHandler.lightningDamageMulti : ConfigHandler.lightningDamageAmount;
-		wind *= ConfigHandler.isWindDamagePercent ? weaponDamage * ConfigHandler.windDamageMulti : ConfigHandler.windDamageAmount;
 
 		phys *= ConfigHandler.normalBowMulti;
 		fire *= ConfigHandler.fireBowMulti;
 		magic *= ConfigHandler.magicBowMulti;
 		wither *= ConfigHandler.witherBowMulti;
-		divine *= ConfigHandler.divineBowMulti;
-		chaos *= ConfigHandler.chaosBowMulti;
-		taint *= ConfigHandler.taintBowMulti;
-		frost *= ConfigHandler.frostBowMulti;
-		holy *= ConfigHandler.holyBowMulti;
-		lightning *= ConfigHandler.lightningBowMulti;
-		wind *= ConfigHandler.windBowMulti;
 
 		phys += weaponDamage;
 
@@ -308,13 +449,6 @@ public class ItemModBow extends ItemBow implements IUpgradeable
 		int fireDamage = Upgrade.getUpgradeLevel(item, UpgradeRegistry.WeaponFireDamage);
 		int magicDamage = Upgrade.getUpgradeLevel(item, UpgradeRegistry.WeaponMagicDamage);
 		int witherDamage = Upgrade.getUpgradeLevel(item, UpgradeRegistry.WeaponWitherDamage);
-		int divineDamage = Upgrade.getUpgradeLevel(item, UpgradeRegistry.WeaponDivineDamage);
-		int chaosDamage = Upgrade.getUpgradeLevel(item, UpgradeRegistry.WeaponChaosDamage);
-		int taintDamage = Upgrade.getUpgradeLevel(item, UpgradeRegistry.WeaponTaintDamage);
-		int frostDamage = Upgrade.getUpgradeLevel(item, UpgradeRegistry.WeaponFrostDamage);
-		int holyDamage = Upgrade.getUpgradeLevel(item, UpgradeRegistry.WeaponHolyDamage);
-		int lightningDamage = Upgrade.getUpgradeLevel(item, UpgradeRegistry.WeaponLightningDamage);
-		int windDamage = Upgrade.getUpgradeLevel(item, UpgradeRegistry.WeaponWindDamage);
 
 		int level = getLevel(item);
 		if (level != 0)
@@ -367,48 +501,6 @@ public class ItemModBow extends ItemBow implements IUpgradeable
 			if (ConfigHandler.isWitherDamagePercent)
 				list.add(I18n.translateToLocal(UpgradeRegistry.WeaponWitherDamage.name) + ": Shots deal " + witherDamage * ConfigHandler.witherDamageMulti * ConfigHandler.witherBowMulti * 100 + "% more damage as wither damage.");
 			else list.add(I18n.translateToLocal(UpgradeRegistry.WeaponWitherDamage.name) + ": Shots deal " + witherDamage * ConfigHandler.witherDamageAmount * ConfigHandler.witherBowMulti + " extra damage as wither damage.");
-		}
-		if (divineDamage != 0)
-		{
-			if (ConfigHandler.isDivineDamagePercent)
-				list.add(I18n.translateToLocal(UpgradeRegistry.WeaponDivineDamage.name) + ": Shots deal " + divineDamage * ConfigHandler.divineDamageMulti * ConfigHandler.divineBowMulti * 100 + "% more damage as divine damage.");
-			else list.add(I18n.translateToLocal(UpgradeRegistry.WeaponDivineDamage.name) + ": Shots deal " + divineDamage * ConfigHandler.divineDamageAmount * ConfigHandler.divineBowMulti + " extra damage as divine damage.");
-		}
-		if (chaosDamage != 0)
-		{
-			if (ConfigHandler.isChaosDamagePercent)
-				list.add(I18n.translateToLocal(UpgradeRegistry.WeaponChaosDamage.name) + ": Shots deal " + chaosDamage * ConfigHandler.chaosDamageMulti * ConfigHandler.chaosBowMulti * 100 + "% more damage as chaos damage.");
-			else list.add(I18n.translateToLocal(UpgradeRegistry.WeaponChaosDamage.name) + ": Shots deal " + chaosDamage * ConfigHandler.chaosDamageAmount * ConfigHandler.chaosBowMulti + " extra damage as chaos damage.");
-		}
-		if (taintDamage != 0)
-		{
-			if (ConfigHandler.isDivineDamagePercent)
-				list.add(I18n.translateToLocal(UpgradeRegistry.WeaponTaintDamage.name) + ": Shots deal " + taintDamage * ConfigHandler.taintDamageMulti * ConfigHandler.taintBowMulti * 100 + "% more damage as taint damage.");
-			else list.add(I18n.translateToLocal(UpgradeRegistry.WeaponTaintDamage.name) + ": Shots deal " + taintDamage * ConfigHandler.taintDamageAmount * ConfigHandler.taintBowMulti + " extra damage as taint damage.");
-		}
-		if (frostDamage != 0)
-		{
-			if (ConfigHandler.isDivineDamagePercent)
-				list.add(I18n.translateToLocal(UpgradeRegistry.WeaponFrostDamage.name) + ": Shots deal " + frostDamage * ConfigHandler.frostDamageMulti * ConfigHandler.frostBowMulti * 100 + "% more damage as frost damage.");
-			else list.add(I18n.translateToLocal(UpgradeRegistry.WeaponFrostDamage.name) + ": Shots deal " + frostDamage * ConfigHandler.frostDamageAmount * ConfigHandler.frostBowMulti + " extra damage as frost damage.");
-		}
-		if (holyDamage != 0)
-		{
-			if (ConfigHandler.isDivineDamagePercent)
-				list.add(I18n.translateToLocal(UpgradeRegistry.WeaponHolyDamage.name) + ": Shots deal " + holyDamage * ConfigHandler.holyDamageMulti * ConfigHandler.holyBowMulti * 100 + "% more damage as holy damage.");
-			else list.add(I18n.translateToLocal(UpgradeRegistry.WeaponHolyDamage.name) + ": Shots deal " + holyDamage * ConfigHandler.holyDamageAmount * ConfigHandler.holyBowMulti + " extra damage as holy damage.");
-		}
-		if (lightningDamage != 0)
-		{
-			if (ConfigHandler.isDivineDamagePercent)
-				list.add(I18n.translateToLocal(UpgradeRegistry.WeaponLightningDamage.name) + ": Shots deal " + lightningDamage * ConfigHandler.lightningDamageMulti * ConfigHandler.lightningBowMulti * 100 + "% more damage as lightning damage.");
-			else list.add(I18n.translateToLocal(UpgradeRegistry.WeaponLightningDamage.name) + ": Shots deal " + lightningDamage * ConfigHandler.lightningDamageAmount * ConfigHandler.lightningBowMulti + " extra damage as lightning damage.");
-		}
-		if (windDamage != 0)
-		{
-			if (ConfigHandler.isDivineDamagePercent)
-				list.add(I18n.translateToLocal(UpgradeRegistry.WeaponWindDamage.name) + ": Shots deal " + windDamage * ConfigHandler.windDamageMulti * ConfigHandler.windBowMulti * 100 + "% more damage as wind damage.");
-			else list.add(I18n.translateToLocal(UpgradeRegistry.WeaponWindDamage.name) + ": Shots deal " + windDamage * ConfigHandler.windDamageAmount * ConfigHandler.windBowMulti + " extra damage as wind damage.");
 		}
 
 		return list;

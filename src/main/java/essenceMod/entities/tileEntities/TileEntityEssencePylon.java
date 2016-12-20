@@ -16,6 +16,7 @@ public class TileEntityEssencePylon extends TileEntityEssenceInfuser implements 
 	public void update()
 	{
 		markDirty();
+		worldObj.markBlockRangeForRenderUpdate(pos, pos.add(1, 1, 1));
 	}
 
 	@Override
@@ -28,5 +29,6 @@ public class TileEntityEssencePylon extends TileEntityEssenceInfuser implements 
 	{
 		slots[0] = null;
 		markDirty();
+		worldObj.markBlockRangeForRenderUpdate(pos, pos.add(1, 1, 1));
 	}
 }
